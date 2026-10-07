@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ability_data.gd" id="1_8xgs3"]
+
+[resource]
+script = ExtResource("1_8xgs3")
+id = &"night_bloom"
+display_name = "Night Bloom"
+description = "A giant flower of light opens, then explodes after 1 s for huge area damage."
+icon = "bloom"
+is_ultimate = true
+cooldown = 55.0
+cooldown_per_rank = -6.0
+mana_cost = 120.0
+damage = 270.0
+damage_per_rank = 120.0
+cast_range = 640.0
+radius = 260.0
+duration = 0.0
+delay = 1.0

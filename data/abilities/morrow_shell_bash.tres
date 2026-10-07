@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ability_data.gd" id="1_hg5i3"]
+
+[resource]
+script = ExtResource("1_hg5i3")
+id = &"shell_bash"
+display_name = "Shell Bash"
+description = "Dash forward; the first enemy hit is stunned for 1 s."
+icon = "bash"
+cooldown = 9.0
+damage = 75.0
+cast_range = 290.0
+radius = 0.0
+projectile_speed = 1250.0

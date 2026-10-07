@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="UnitStats" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_stats.gd" id="1_er3ow"]
+
+[resource]
+script = ExtResource("1_er3ow")
+display_name = "Thornling"
+max_hp = 430.0
+armor = 5.0
+damage = 24.0
+attack_range = 55.0
+attack_interval = 1.1
+move_speed = 260.0
+aggro_range = 0.0
+radius = 18.0
+xp_bounty = 45
+projectile_speed = 0.0

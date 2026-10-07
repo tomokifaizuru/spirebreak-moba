@@ -1,0 +1,5 @@
+# Godot cache (re-created on import)
+.godot/
+# Build artifacts
+*.zip
+*.tmp

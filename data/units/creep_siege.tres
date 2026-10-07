@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="UnitStats" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_stats.gd" id="1_6vlmk"]
+
+[resource]
+script = ExtResource("1_6vlmk")
+display_name = "Siege Creep"
+max_hp = 720.0
+armor = 10.0
+damage = 42.0
+attack_range = 330.0
+attack_interval = 1.6
+move_speed = 195.0
+aggro_range = 420.0
+radius = 21.0
+gold_bounty = 45
+xp_bounty = 70
+ranged = true
+projectile_speed = 600.0
+structure_damage_mult = 3.0
+hp_growth_per_min = 0.06
+damage_growth_per_min = 0.05

@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="HeroData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ability_data.gd" id="1_abdwm"]
+[ext_resource type="Resource" path="res://data/abilities/lumi_wisp_bolt.tres" id="2_w6t1a"]
+[ext_resource type="Resource" path="res://data/abilities/lumi_star_snare.tres" id="3_krtng"]
+[ext_resource type="Resource" path="res://data/abilities/lumi_lantern_hop.tres" id="4_nxxa2"]
+[ext_resource type="Resource" path="res://data/abilities/lumi_night_bloom.tres" id="5_scb52"]
+[ext_resource type="Script" path="res://scripts/data/hero_data.gd" id="6_leh3d"]
+
+[resource]
+script = ExtResource("6_leh3d")
+id = &"lumi"
+display_name = "Lumi Vesper"
+title = "the Lantern Witch"
+role = 1
+body_color = Color(0.35686275, 0.24705882, 0.8156863, 1)
+accent_color = Color(0.7490196, 0.93333334, 1, 1)
+detail_color = Color(1, 0.84705883, 0.2901961, 1)
+max_hp = 560.0
+hp_per_level = 65.0
+hp_regen = 1.6
+max_mana = 520.0
+mana_per_level = 45.0
+mana_regen = 4.5
+armor = 6.0
+armor_per_level = 1.0
+attack_damage = 40.0
+attack_damage_per_level = 3.0
+attack_range = 370.0
+attack_interval = 1.0
+projectile_speed = 900.0
+abilities = Array[ExtResource("1_abdwm")]([ExtResource("2_w6t1a"), ExtResource("3_krtng"), ExtResource("4_nxxa2"), ExtResource("5_scb52")])
+skill_priority = PackedInt32Array(0, 1, 2)
+bot_retreat_hp = 0.35
+bot_aggression = 0.9

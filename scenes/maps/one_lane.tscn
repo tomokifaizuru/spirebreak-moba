@@ -1,0 +1,160 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/map.gd" id="1_map"]
+[ext_resource type="Script" path="res://scripts/units/structure.gd" id="2_st"]
+[ext_resource type="Resource" path="res://data/units/tower_outer.tres" id="3_outer"]
+[ext_resource type="Resource" path="res://data/units/tower_inner.tres" id="4_inner"]
+[ext_resource type="Resource" path="res://data/units/heartspire.tres" id="5_heart"]
+
+[node name="OneLane" type="Node2D"]
+script = ExtResource("1_map")
+
+[node name="Lane" type="Node2D" parent="."]
+
+[node name="L00" type="Marker2D" parent="Lane"]
+position = Vector2(640, 4460)
+gizmo_extents = 40.0
+
+[node name="L01" type="Marker2D" parent="Lane"]
+position = Vector2(1120, 4120)
+gizmo_extents = 40.0
+
+[node name="L02" type="Marker2D" parent="Lane"]
+position = Vector2(1650, 3870)
+gizmo_extents = 40.0
+
+[node name="L03" type="Marker2D" parent="Lane"]
+position = Vector2(1950, 3380)
+gizmo_extents = 40.0
+
+[node name="L04" type="Marker2D" parent="Lane"]
+position = Vector2(2230, 2880)
+gizmo_extents = 40.0
+
+[node name="L05" type="Marker2D" parent="Lane"]
+position = Vector2(2550, 2550)
+gizmo_extents = 40.0
+
+[node name="L06" type="Marker2D" parent="Lane"]
+position = Vector2(2880, 2230)
+gizmo_extents = 40.0
+
+[node name="L07" type="Marker2D" parent="Lane"]
+position = Vector2(3380, 1950)
+gizmo_extents = 40.0
+
+[node name="L08" type="Marker2D" parent="Lane"]
+position = Vector2(3870, 1650)
+gizmo_extents = 40.0
+
+[node name="L09" type="Marker2D" parent="Lane"]
+position = Vector2(4120, 1120)
+gizmo_extents = 40.0
+
+[node name="L10" type="Marker2D" parent="Lane"]
+position = Vector2(4460, 640)
+gizmo_extents = 40.0
+
+[node name="River" type="Node2D" parent="."]
+
+[node name="R00" type="Marker2D" parent="River"]
+position = Vector2(-150, -150)
+gizmo_extents = 40.0
+
+[node name="R01" type="Marker2D" parent="River"]
+position = Vector2(700, 800)
+gizmo_extents = 40.0
+
+[node name="R02" type="Marker2D" parent="River"]
+position = Vector2(1500, 1450)
+gizmo_extents = 40.0
+
+[node name="R03" type="Marker2D" parent="River"]
+position = Vector2(2550, 2550)
+gizmo_extents = 40.0
+
+[node name="R04" type="Marker2D" parent="River"]
+position = Vector2(3500, 3650)
+gizmo_extents = 40.0
+
+[node name="R05" type="Marker2D" parent="River"]
+position = Vector2(4350, 4250)
+gizmo_extents = 40.0
+
+[node name="R06" type="Marker2D" parent="River"]
+position = Vector2(5250, 5250)
+gizmo_extents = 40.0
+
+[node name="Camps" type="Node2D" parent="."]
+
+[node name="Camp1" type="Marker2D" parent="Camps"]
+position = Vector2(1250, 3150)
+gizmo_extents = 50.0
+
+[node name="Camp2" type="Marker2D" parent="Camps"]
+position = Vector2(2650, 3800)
+gizmo_extents = 50.0
+
+[node name="Camp3" type="Marker2D" parent="Camps"]
+position = Vector2(3150, 1250)
+gizmo_extents = 50.0
+
+[node name="Camp4" type="Marker2D" parent="Camps"]
+position = Vector2(3800, 2650)
+gizmo_extents = 50.0
+
+[node name="DawnFountain" type="Marker2D" parent="."]
+position = Vector2(250, 4850)
+gizmo_extents = 60.0
+
+[node name="DuskFountain" type="Marker2D" parent="."]
+position = Vector2(4850, 250)
+gizmo_extents = 60.0
+
+[node name="Shrine" type="Marker2D" parent="."]
+position = Vector2(3650, 3650)
+gizmo_extents = 60.0
+
+[node name="Structures" type="Node2D" parent="."]
+
+[node name="DawnHeartspire" type="Node2D" parent="Structures"]
+position = Vector2(640, 4460)
+script = ExtResource("2_st")
+team_id = 0
+tier = 2
+stats = ExtResource("5_heart")
+
+[node name="DawnInnerTower" type="Node2D" parent="Structures"]
+position = Vector2(1452, 3983)
+script = ExtResource("2_st")
+team_id = 0
+tier = 1
+stats = ExtResource("4_inner")
+
+[node name="DawnOuterTower" type="Node2D" parent="Structures"]
+position = Vector2(2018, 3256)
+script = ExtResource("2_st")
+team_id = 0
+tier = 0
+stats = ExtResource("3_outer")
+
+[node name="DuskOuterTower" type="Node2D" parent="Structures"]
+position = Vector2(3256, 2018)
+script = ExtResource("2_st")
+team_id = 1
+tier = 0
+stats = ExtResource("3_outer")
+
+[node name="DuskInnerTower" type="Node2D" parent="Structures"]
+position = Vector2(3983, 1452)
+script = ExtResource("2_st")
+team_id = 1
+tier = 1
+stats = ExtResource("4_inner")
+
+[node name="DuskHeartspire" type="Node2D" parent="Structures"]
+position = Vector2(4460, 640)
+script = ExtResource("2_st")
+team_id = 1
+tier = 2
+stats = ExtResource("5_heart")

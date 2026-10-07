@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="HeroData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ability_data.gd" id="1_1inll"]
+[ext_resource type="Resource" path="res://data/abilities/morrow_shell_bash.tres" id="2_m2qlq"]
+[ext_resource type="Resource" path="res://data/abilities/morrow_barkskin.tres" id="3_vpk3i"]
+[ext_resource type="Resource" path="res://data/abilities/morrow_rootcall_roar.tres" id="4_kwil6"]
+[ext_resource type="Resource" path="res://data/abilities/morrow_landslide.tres" id="5_r2poj"]
+[ext_resource type="Script" path="res://scripts/data/hero_data.gd" id="6_0vxcq"]
+
+[resource]
+script = ExtResource("6_0vxcq")
+id = &"morrow"
+display_name = "Morrow"
+title = "the Mossback Warden"
+body_color = Color(0.3529412, 0.6392157, 0.27450982, 1)
+accent_color = Color(0.6039216, 0.6392157, 0.6784314, 1)
+detail_color = Color(1, 0.84313726, 0.36862746, 1)
+max_hp = 920.0
+hp_per_level = 95.0
+hp_regen = 3.0
+max_mana = 300.0
+mana_per_level = 30.0
+mana_regen = 2.0
+armor = 18.0
+armor_per_level = 1.5
+move_speed = 290.0
+attack_damage = 46.0
+attack_damage_per_level = 3.5
+attack_range = 75.0
+attack_interval = 1.05
+ranged_attack = false
+projectile_speed = 0.0
+abilities = Array[ExtResource("1_1inll")]([ExtResource("2_m2qlq"), ExtResource("3_vpk3i"), ExtResource("4_kwil6"), ExtResource("5_r2poj")])
+skill_priority = PackedInt32Array(0, 1, 2)
+bot_retreat_hp = 0.25
+bot_aggression = 1.15

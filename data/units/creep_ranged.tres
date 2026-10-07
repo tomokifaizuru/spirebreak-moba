@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="UnitStats" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_stats.gd" id="1_fhwhn"]
+
+[resource]
+script = ExtResource("1_fhwhn")
+display_name = "Ranged Creep"
+max_hp = 240.0
+damage = 27.0
+attack_range = 300.0
+attack_interval = 1.1
+move_speed = 215.0
+aggro_range = 400.0
+radius = 14.0
+gold_bounty = 22
+xp_bounty = 35
+ranged = true
+projectile_speed = 760.0
+hp_growth_per_min = 0.06
+damage_growth_per_min = 0.05

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ability_data.gd" id="1_g3u4j"]
+
+[resource]
+script = ExtResource("1_g3u4j")
+id = &"ember_dash"
+display_name = "Ember Dash"
+description = "Dash through an enemy; resets if it gets the kill."
+icon = "ember"
+mana_cost = 45.0
+damage = 85.0
+damage_per_rank = 40.0
+cast_range = 400.0
+radius = 0.0
+duration = 0.0
+projectile_speed = 1500.0

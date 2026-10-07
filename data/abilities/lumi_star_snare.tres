@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ability_data.gd" id="1_rwxu7"]
+
+[resource]
+script = ExtResource("1_rwxu7")
+id = &"star_snare"
+display_name = "Star Snare"
+description = "Mark a circle; after 0.6 s enemies inside are rooted."
+icon = "snare"
+cooldown = 10.0
+mana_cost = 70.0
+damage = 70.0
+cast_range = 620.0
+radius = 145.0
+duration = 1.25
+delay = 0.6

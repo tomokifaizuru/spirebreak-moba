@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ability_data.gd" id="1_v87ut"]
+
+[resource]
+script = ExtResource("1_v87ut")
+id = &"barkskin"
+display_name = "Barkskin"
+description = "Gain a shield worth 15% max HP for 3 s."
+icon = "shield"
+cooldown = 12.0
+cooldown_per_rank = -0.75
+mana_cost = 45.0
+damage = 0.0
+damage_per_rank = 0.0
+cast_range = 0.0
+radius = 0.0
+duration = 3.0
+value = 0.15
+value_per_rank = 0.03

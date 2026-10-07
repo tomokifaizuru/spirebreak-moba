@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="UnitStats" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_stats.gd" id="1_dbhde"]
+
+[resource]
+script = ExtResource("1_dbhde")
+display_name = "Inner Tower"
+max_hp = 2050.0
+armor = 32.0
+damage = 145.0
+attack_range = 420.0
+move_speed = 0.0
+aggro_range = 0.0
+radius = 44.0
+gold_bounty = 120
+xp_bounty = 180
+ranged = true
+projectile_speed = 950.0

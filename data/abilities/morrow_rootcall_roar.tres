@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ability_data.gd" id="1_tgope"]
+
+[resource]
+script = ExtResource("1_tgope")
+id = &"rootcall_roar"
+display_name = "Rootcall Roar"
+description = "Nearby enemies are forced to attack you for 1.5 s."
+icon = "roar"
+cooldown = 14.0
+cooldown_per_rank = -1.0
+mana_cost = 60.0
+damage = 45.0
+damage_per_rank = 25.0
+cast_range = 0.0
+radius = 290.0
+duration = 1.5

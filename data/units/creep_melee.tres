@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="UnitStats" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_stats.gd" id="1_pj115"]
+
+[resource]
+script = ExtResource("1_pj115")
+display_name = "Melee Creep"
+max_hp = 330.0
+damage = 21.0
+attack_range = 45.0
+move_speed = 215.0
+xp_bounty = 30
+projectile_speed = 0.0
+hp_growth_per_min = 0.06
+damage_growth_per_min = 0.05

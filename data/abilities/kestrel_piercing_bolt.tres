@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ability_data.gd" id="1_gr0lg"]
+
+[resource]
+script = ExtResource("1_gr0lg")
+id = &"piercing_bolt"
+display_name = "Piercing Bolt"
+description = "Long shot that passes through every enemy in a line."
+cooldown = 7.0
+mana_cost = 55.0
+damage = 95.0
+damage_per_rank = 40.0
+cast_range = 760.0
+radius = 34.0
+duration = 0.0
+projectile_speed = 1500.0

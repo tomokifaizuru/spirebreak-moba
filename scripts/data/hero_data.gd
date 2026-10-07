@@ -1,0 +1,54 @@
+class_name HeroData
+extends Resource
+## A playable hero: base stats, growth per level, look and its 4 skills.
+## Open data/heroes/<name>.tres in Godot and change the numbers in the Inspector.
+
+@export var id: StringName = &""
+@export var display_name := "Hero"
+@export var title := ""
+@export_enum("Tank", "Mage", "Marksman", "Assassin") var role := 0
+
+@export_group("Look")
+@export var body_color := Color.WHITE
+@export var accent_color := Color.GRAY
+@export var detail_color := Color.BLACK
+
+@export_group("Health and mana")
+@export var max_hp := 600.0
+@export var hp_per_level := 70.0
+## HP regenerated per second.
+@export var hp_regen := 2.0
+@export var max_mana := 400.0
+@export var mana_per_level := 35.0
+## Mana regenerated per second.
+@export var mana_regen := 3.0
+## Damage reduction: damage taken x 100 / (100 + armor).
+@export var armor := 8.0
+@export var armor_per_level := 1.2
+
+@export_group("Attack and movement")
+## World pixels per second.
+@export var move_speed := 300.0
+@export var attack_damage := 50.0
+@export var attack_damage_per_level := 4.0
+## Distance between the two units' edges. Melee heroes use ~70.
+@export var attack_range := 400.0
+## Seconds between basic attacks.
+@export var attack_interval := 0.9
+## True = basic attacks fire a projectile, false = melee hit.
+@export var ranged_attack := true
+@export var projectile_speed := 1100.0
+## Body size (collision and drawing).
+@export var radius := 28.0
+
+@export_group("Skills")
+## Skill 1, Skill 2, Skill 3, Ultimate (in this order).
+@export var abilities: Array[AbilityData] = []
+## Order in which basic skills (0, 1, 2) get their level-up points. The ultimate is always taken at 4 / 8 / 12.
+@export var skill_priority: PackedInt32Array = PackedInt32Array([0, 1, 2])
+
+@export_group("Bot behaviour")
+## Bots go home below this HP fraction.
+@export_range(0.05, 0.9, 0.01) var bot_retreat_hp := 0.3
+## Higher = bots fight more eagerly with this hero.
+@export_range(0.3, 2.0, 0.05) var bot_aggression := 1.0

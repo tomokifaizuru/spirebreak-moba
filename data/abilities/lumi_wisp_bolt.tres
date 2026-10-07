@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ability_data.gd" id="1_6evi4"]
+
+[resource]
+script = ExtResource("1_6evi4")
+id = &"wisp_bolt"
+display_name = "Wisp Bolt"
+description = "Fire a homing wisp that bursts on the first enemy."
+icon = "wisp"
+cooldown = 5.0
+cooldown_per_rank = -0.3
+damage = 95.0
+damage_per_rank = 40.0
+cast_range = 650.0
+radius = 110.0
+duration = 0.0
+projectile_speed = 820.0

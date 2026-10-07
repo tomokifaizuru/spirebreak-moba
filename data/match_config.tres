@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="MatchConfig" load_steps=11 format=3]
+
+[ext_resource type="Resource" path="res://data/units/camp_monster.tres" id="1_gg8y2"]
+[ext_resource type="Resource" path="res://data/units/creep_melee.tres" id="2_n3c46"]
+[ext_resource type="Resource" path="res://data/units/creep_ranged.tres" id="3_r4grl"]
+[ext_resource type="Resource" path="res://data/units/creep_siege.tres" id="4_ct44t"]
+[ext_resource type="Script" path="res://scripts/data/hero_data.gd" id="5_q5pea"]
+[ext_resource type="Resource" path="res://data/heroes/morrow.tres" id="6_dpco1"]
+[ext_resource type="Resource" path="res://data/heroes/lumi.tres" id="7_2ytcg"]
+[ext_resource type="Resource" path="res://data/heroes/sable.tres" id="8_jyvlq"]
+[ext_resource type="Resource" path="res://data/heroes/kestrel.tres" id="9_knhds"]
+[ext_resource type="Script" path="res://scripts/data/match_config.gd" id="10_1n8kn"]
+
+[resource]
+script = ExtResource("10_1n8kn")
+player_hero = ExtResource("9_knhds")
+dawn_bots = Array[ExtResource("5_q5pea")]([ExtResource("6_dpco1"), ExtResource("7_2ytcg")])
+dusk_bots = Array[ExtResource("5_q5pea")]([ExtResource("6_dpco1"), ExtResource("8_jyvlq"), ExtResource("7_2ytcg")])
+creep_melee = ExtResource("2_n3c46")
+creep_ranged = ExtResource("3_r4grl")
+creep_siege = ExtResource("4_ct44t")
+camp_monster = ExtResource("1_gg8y2")

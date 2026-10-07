@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ability_data.gd" id="1_pxu6w"]
+
+[resource]
+script = ExtResource("1_pxu6w")
+id = &"hundred_petals"
+display_name = "Hundred Petals"
+description = "Become untargetable and blink-strike up to 5 nearby enemies."
+icon = "petals"
+is_ultimate = true
+cooldown = 50.0
+cooldown_per_rank = -6.0
+mana_cost = 100.0
+damage = 105.0
+damage_per_rank = 55.0
+cast_range = 0.0
+radius = 460.0
+duration = 0.0
+value = 5.0

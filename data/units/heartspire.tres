@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UnitStats" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_stats.gd" id="1_l1bx1"]
+
+[resource]
+script = ExtResource("1_l1bx1")
+display_name = "Heartspire"
+max_hp = 2500.0
+armor = 34.0
+damage = 115.0
+attack_range = 400.0
+attack_interval = 1.2
+move_speed = 0.0
+aggro_range = 0.0
+radius = 70.0
+gold_bounty = 0
+xp_bounty = 0
+ranged = true
+projectile_speed = 950.0
