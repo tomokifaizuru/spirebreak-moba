@@ -9,6 +9,7 @@ display_name = "Landslide"
 description = "Charge in a line, knocking enemies up and leaving a rock wall behind."
 icon = "landslide"
 is_ultimate = true
+aim = "dash"
 cooldown = 50.0
 cooldown_per_rank = -6.0
 mana_cost = 100.0

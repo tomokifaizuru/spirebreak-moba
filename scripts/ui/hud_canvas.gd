@@ -30,6 +30,7 @@ var sb_dark: StyleBoxFlat
 var mm_lane := PackedVector2Array()
 var mm_river := PackedVector2Array()
 var lay := {}
+var portrait_tex: Texture2D
 
 
 func _ready() -> void:
@@ -54,6 +55,23 @@ func setup(a: Arena) -> void:
 	for i in range(0, river.size(), 3):
 		mm_river.append(river[i])
 	a.feed.connect(add_feed)
+	# 3D-rendered portrait of your hero (falls back to the 2D drawing if unavailable)
+	if not a.headless:
+		var holder := Node.new()
+		add_child(holder)
+		portrait_tex = Portraits.make(holder, a.player.data, a.player.team, 128)
+	# who is in this match
+	var mates: Array[String] = []
+	var foes: Array[String] = []
+	for h in a.heroes:
+		var tag := "%s (%s)" % [h.data.display_name, h.data.role_name()]
+		if h.team == a.player.team:
+			if h != a.player:
+				mates.append(tag)
+		else:
+			foes.append(tag)
+	add_feed("Enemies: " + ", ".join(foes), 1 - a.player.team)
+	add_feed("Allies: " + ", ".join(mates), a.player.team)
 
 
 func add_feed(text: String, team: int) -> void:
@@ -204,6 +222,8 @@ func _explain_fail(slot: int) -> void:
 
 
 func _to_world(pos: Vector2) -> Vector2:
+	if arena.view != null:
+		return arena.view.screen_to_world(pos)
 	return get_viewport().get_canvas_transform().affine_inverse() * pos
 
 
@@ -232,7 +252,7 @@ func _press(id: int, pos: Vector2) -> void:
 			get_viewport().set_input_as_handled()
 			return
 		if (lay["shop"] as Rect2).has_point(pos):
-			toast("The shop arrives in v0.2. Your gold is saved for it!", 2.5)
+			toast("The shop is coming in a later update. Your gold is saved for it!", 2.5)
 			get_viewport().set_input_as_handled()
 			return
 		if (lay["minimap"] as Rect2).has_point(pos):
@@ -423,10 +443,15 @@ func _draw_minimap(r: Rect2) -> void:
 		else:
 			draw_circle(c2, 6.0, Color(0.05, 0.05, 0.08))
 			draw_circle(c2, 4.5, Art.team_color(h.team))
-	var vs := get_viewport_rect().size / arena.cam.zoom
-	var cc := arena.cam.get_screen_center_position()
-	var vr := Rect2(o + (cc - vs * 0.5) * k, vs * k)
-	draw_rect(vr.intersection(r), Color(1, 1, 1, 0.85), false, 1.5)
+	if arena.view != null:
+		# the 3D camera sees a trapezoid of ground (wider at the top of the screen)
+		var q := arena.view.view_quad()
+		var pts := PackedVector2Array()
+		for wp in q:
+			var mp := o + wp * k
+			pts.append(Vector2(clampf(mp.x, r.position.x, r.end.x), clampf(mp.y, r.position.y, r.end.y)))
+		pts.append(pts[0])
+		draw_polyline(pts, Color(1, 1, 1, 0.85), 1.5, true)
 
 
 func _draw_shop(r: Rect2) -> void:
@@ -434,7 +459,7 @@ func _draw_shop(r: Rect2) -> void:
 	sb.bg_color = Color(0.55, 0.42, 0.12, 0.7)
 	draw_style_box(sb, r)
 	_text(Vector2(r.position.x + r.size.x * 0.5, r.position.y + 22.0), "SHOP", 18, Color(1, 1, 1, 0.75), 1, 3)
-	_text(Vector2(r.position.x + r.size.x * 0.5, r.position.y + 42.0), "v0.2", 13, Color(1, 0.9, 0.6, 0.8), 1)
+	_text(Vector2(r.position.x + r.size.x * 0.5, r.position.y + 42.0), "soon", 13, Color(1, 0.9, 0.6, 0.8), 1)
 
 
 func _draw_score(r: Rect2) -> void:
@@ -493,7 +518,10 @@ func _draw_portrait(r: Rect2) -> void:
 	var c := r.position + Vector2(50.0, 50.0)
 	draw_circle(c, 40.0, Color(p.data.body_color, 0.35))
 	draw_arc(c, 40.0, 0, TAU, 40, Art.PLAYER, 3.0, true)
-	Art.draw_hero(self, p.data.id, c, 30.0, Vector2(0, 0.6), 1.0 if p.alive else 0.4)
+	if portrait_tex != null:
+		draw_texture_rect(portrait_tex, Rect2(c - Vector2(42, 44), Vector2(84, 84)), false, Color(1, 1, 1, 1.0 if p.alive else 0.4))
+	else:
+		Art.draw_hero(self, p.data.id, c, 30.0, Vector2(0, 0.6), 1.0 if p.alive else 0.4)
 	var lc := c + Vector2(30.0, 28.0)
 	draw_circle(lc, 15.0, Color(0.06, 0.07, 0.1))
 	draw_arc(lc, 15.0, 0, TAU, 24, Art.GOLD, 2.0, true)
@@ -501,9 +529,20 @@ func _draw_portrait(r: Rect2) -> void:
 	var x0 := r.position.x + 102.0
 	var bw := r.size.x - 102.0 - 92.0
 	_text(Vector2(x0, r.position.y + 21.0), p.data.display_name, 18, Color.WHITE, 0, 3)
-	var role: String = ["Tank", "Mage", "Marksman", "Assassin"][p.data.role]
+	# role badge next to the name
+	var role := p.data.role_name().to_upper()
+	var nw := font.get_string_size(p.data.display_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 18).x
+	var rw := font.get_string_size(role, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x + 14.0
+	var badge := Rect2(x0 + nw + 8.0, r.position.y + 8.0, rw, 17.0)
+	var bsb := StyleBoxFlat.new()
+	bsb.bg_color = p.data.role_color().darkened(0.35)
+	bsb.border_color = p.data.role_color()
+	bsb.set_border_width_all(1)
+	bsb.set_corner_radius_all(8)
+	draw_style_box(bsb, badge)
+	_text(Vector2(badge.position.x + rw * 0.5, badge.position.y + 13.0), role, 11, Color.WHITE, 1)
 	var xp_txt := "MAX" if p.level >= arena.config.max_level else "XP %d%%" % int(100.0 * p.xp / p.xp_needed())
-	_text(Vector2(x0 + bw, r.position.y + 20.0), "%s · %s" % [role, xp_txt], 13, Color(1, 1, 1, 0.6), 2)
+	_text(Vector2(x0 + bw, r.position.y + 20.0), xp_txt, 13, Color(1, 1, 1, 0.6), 2)
 	var hr := Rect2(x0, r.position.y + 30.0, bw, 16.0)
 	draw_rect(hr, Color(0.15, 0.17, 0.2))
 	draw_rect(Rect2(hr.position, Vector2(bw * p.hp_frac(), hr.size.y)), Color("4cd06a"))

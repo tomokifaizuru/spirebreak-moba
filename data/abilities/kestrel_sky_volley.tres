@@ -9,6 +9,7 @@ display_name = "Sky Volley"
 description = "Rain arrows on a large area for 3 s, slowing everything inside."
 icon = "volley"
 is_ultimate = true
+aim = "area"
 cooldown = 50.0
 cooldown_per_rank = -6.0
 mana_cost = 110.0

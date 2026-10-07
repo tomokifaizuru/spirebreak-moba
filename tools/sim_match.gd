@@ -1,9 +1,10 @@
 extends SceneTree
 ## Headless match test: every hero (yours too) is a bot. Prints progress and a summary.
-##   godot --headless --path . -s tools/sim_match.gd -- seed=3 limit=1000 substeps=4
+##   godot --headless --path . -s tools/sim_match.gd -- seed=3 limit=1000 substeps=4 [hero=rook]
+## Each seed picks a random hero for you (or `hero=<id>`) and random bot teams (same builder as the game).
 var arena: Arena
 var frames := 0
-var opts := {"seed": "1", "limit": "1100", "substeps": "4", "log": "60"}
+var opts := {"seed": "1", "limit": "1100", "substeps": "4", "log": "60", "hero": "random"}
 var last_log := 0.0
 var last_pos := {}
 var stuck := {}
@@ -26,6 +27,21 @@ func _physics_process(_d: float) -> bool:
 	if frames == 1:
 		arena = load("res://scenes/match.tscn").instantiate()
 		arena.sim_substeps = int(opts["substeps"])
+		var cfg: MatchConfig = load("res://data/match_config.tres")
+		var rng := RandomNumberGenerator.new()
+		rng.seed = int(opts["seed"]) * 7919 + 13
+		var pick: HeroData = cfg.roster[rng.randi_range(0, cfg.roster.size() - 1)]
+		for h in cfg.roster:
+			if str(h.id) == opts["hero"]:
+				pick = h
+		arena.lineup = Lineup.build(pick, cfg.roster, rng)
+		var names := []
+		for t in ["dawn", "dusk"]:
+			var l := []
+			for h in arena.lineup[t]:
+				l.append("%s(%s)" % [h.display_name, h.role_name()])
+			names.append(", ".join(l))
+		print("LINEUP seed=%s  DAWN: %s  vs  DUSK: %s" % [opts["seed"], names[0], names[1]])
 		root.add_child(arena)
 		arena.player.autopilot = true
 		wall_start = Time.get_ticks_msec()
@@ -62,6 +78,7 @@ func _physics_process(_d: float) -> bool:
 		print(s)
 	if arena.over or t > float(opts["limit"]):
 		var wall := (Time.get_ticks_msec() - wall_start) / 1000.0
+		print("CASTS ", arena.cast_counts)
 		print("RESULT seed=%s winner=%s reason=\"%s\" time=%.0fs (%d:%02d) kills=%d-%d buildings_destroyed=%d-%d waves=%d max_creeps=%d old_creep_samples=%d stuck=%s wall=%.1fs" % [
 			opts["seed"], ("DAWN" if arena.winner == 0 else ("DUSK" if arena.winner == 1 else "NONE")), arena.end_reason, t, int(t) / 60, int(t) % 60,
 			arena.kills[0], arena.kills[1], arena.destroyed[0], arena.destroyed[1], arena.wave_count, max_creeps, old_creeps, str(stuck), wall])

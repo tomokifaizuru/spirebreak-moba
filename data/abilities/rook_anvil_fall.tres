@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ability_data.gd" id="1_wav4p"]
+
+[resource]
+script = ExtResource("1_wav4p")
+id = &"anvil_fall"
+display_name = "Anvil Fall"
+description = "Leap high and slam down: big area damage, 1 s stun, and a shield for each hero hit."
+icon = "anvil"
+is_ultimate = true
+aim = "area"
+cooldown = 60.0
+cooldown_per_rank = -7.0
+mana_cost = 100.0
+damage = 190.0
+damage_per_rank = 95.0
+cast_range = 520.0
+radius = 250.0
+value = 70.0
+value_per_rank = 30.0
+projectile_speed = 900.0

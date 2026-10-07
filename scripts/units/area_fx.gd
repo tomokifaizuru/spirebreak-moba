@@ -15,6 +15,10 @@ var tick_t := 0.0
 var dmg := 0.0
 var slow := 0.0
 var root_dur := 0.0
+## Spring Chorus: heal per tick for allied heroes inside.
+var heal_amt := 0.0
+## The area moves with this unit (Spring Chorus follows Calla).
+var follow: Unit = null
 var triggered := false
 var wall_points: PackedVector2Array = PackedVector2Array()
 var wall_r := 36.0
@@ -33,7 +37,24 @@ func step(dt: float) -> void:
 	if done:
 		return
 	t += dt
+	if follow != null:
+		if is_instance_valid(follow) and follow.alive:
+			position = follow.position
+		else:
+			finish()
+			return
 	match kind:
+		"chorus":
+			tick_t -= dt
+			if tick_t <= 0.0:
+				tick_t += tick
+				for h in arena.heroes:
+					if h.alive and h.team == team and h.position.distance_to(position) <= radius + h.radius:
+						h.heal(heal_amt)
+				for e in _enemies():
+					e.apply_slow(slow, tick + 0.2)
+			if t >= duration:
+				finish()
 		"volley":
 			tick_t -= dt
 			if tick_t <= 0.0:

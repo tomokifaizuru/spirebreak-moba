@@ -7,17 +7,25 @@ signal match_over(winner: int)
 signal feed(text: String, team: int)
 
 @export var config: MatchConfig
-## Camera zoom (bigger = closer).
-@export var camera_zoom := 1.0
+## 3D camera: pitch in degrees (90 = straight down), distance in metres, vertical field of view.
+@export_range(35.0, 85.0) var camera_pitch := 56.0
+@export_range(6.0, 25.0) var camera_distance := 10.5
+@export_range(20.0, 70.0) var camera_fov := 38.0
 ## Debug fast-forward: simulation ticks per frame. Keep at 1 for normal play.
 @export var sim_substeps := 1
+## Set before the match enters the tree to override the teams: {"dawn": [you, ally, ally], "dusk": [...]}.
+var lineup := {}
+## Ground point the camera looks at (2D world pixels).
+var cam_focus := Vector2.ZERO
+## 3D presentation (null when headless).
+var view: WorldView = null
+var overlay: WorldOverlay = null
 
 @onready var map: ArenaMap = $Map
 @onready var units_root: Node2D = $Units
 @onready var ground_root: Node2D = $Ground
 @onready var air_root: Node2D = $Air
 @onready var fx: FxLayer = $Fx
-@onready var cam: Camera2D = $Camera
 @onready var hud = $HUD
 
 var headless := false
@@ -67,21 +75,27 @@ func _ready() -> void:
 	shrine_pos = map.shrine_pos()
 	for p in map.camp_positions():
 		camps.append({"pos": p, "respawn_t": 0.0, "index": camps.size()})
-	var dawn: Array[HeroData] = [config.player_hero]
-	dawn.append_array(config.dawn_bots)
+	var game0 := get_node_or_null("/root/Game")
+	if lineup.is_empty() and game0 != null and not game0.next_lineup.is_empty():
+		lineup = game0.next_lineup
+	var dawn: Array = []
+	var dusk: Array = []
+	if not lineup.is_empty():
+		dawn = lineup["dawn"]
+		dusk = lineup["dusk"]
+	else:
+		dawn = [config.player_hero]
+		dawn.append_array(config.dawn_bots)
+		dusk = config.dusk_bots
 	for i in dawn.size():
 		_spawn_hero(dawn[i], 0, i == 0, i)
-	for i in config.dusk_bots.size():
-		_spawn_hero(config.dusk_bots[i], 1, false, i)
+	for i in dusk.size():
+		_spawn_hero(dusk[i], 1, false, i)
 	_update_structure_locks()
 	wave_t = config.first_wave_time
-	cam.zoom = Vector2(camera_zoom, camera_zoom)
-	cam.limit_left = 0
-	cam.limit_top = 0
-	cam.limit_right = int(map.map_size.x)
-	cam.limit_bottom = int(map.map_size.y)
-	cam.position = player.position
-	cam.reset_smoothing()
+	cam_focus = player.position
+	if not headless:
+		_build_view()
 	var game := get_node_or_null("/root/Game")
 	if game != null:
 		if game.debug_args.has("autopilot"):
@@ -157,13 +171,39 @@ func _physics_process(delta: float) -> void:
 func _process(delta: float) -> void:
 	if player == null:
 		return
-	var target := player.position if player.alive else cam.position
+	var target := player.position if player.alive else cam_focus
 	if look_override != Vector2.INF:
 		target = look_override
 	var k := 1.0 - exp(-10.0 * delta)
 	if look_override != Vector2.INF:
 		k = 1.0 - exp(-18.0 * delta)
-	cam.position = cam.position.lerp(target, k)
+	cam_focus = cam_focus.lerp(target, k)
+	# keep the view inside the map (the view sees further toward the top of the screen)
+	cam_focus.x = clampf(cam_focus.x, 350.0, map.map_size.x - 350.0)
+	cam_focus.y = clampf(cam_focus.y, 250.0, map.map_size.y - 150.0)
+
+
+## Builds the 3D world view + overlay and hides the old 2D drawing (the 2D nodes keep simulating).
+func _build_view() -> void:
+	for n in [map, ground_root, units_root, air_root]:
+		n.visible = false
+		n.process_mode = Node.PROCESS_MODE_DISABLED
+	fx.visible = false
+	var t0 := Time.get_ticks_msec()
+	view = WorldView.new()
+	view.pitch = camera_pitch
+	view.distance = camera_distance
+	view.fov = camera_fov
+	add_child(view)
+	view.setup(self)
+	print("3D view built in %d ms" % (Time.get_ticks_msec() - t0))
+	var layer := CanvasLayer.new()
+	layer.layer = 1
+	layer.name = "WorldOverlay"
+	add_child(layer)
+	overlay = WorldOverlay.new()
+	layer.add_child(overlay)
+	overlay.setup(self, view)
 
 
 func _step(dt: float) -> void:
@@ -463,6 +503,8 @@ func _share_xp(u: Unit, amount: float, enemy_of: int) -> void:
 
 func on_unit_died(u: Unit, killer: Unit) -> void:
 	var kh := _credit(u, killer)
+	if view != null:
+		view.unit_died(u)
 	match u.kind:
 		Unit.Kind.CREEP, Unit.Kind.NEUTRAL:
 			if kh != null:
@@ -541,7 +583,12 @@ func on_respawn(_h: Hero) -> void:
 	pass
 
 
-func on_cast(h: Hero, _ab: AbilityData) -> void:
+## Skill use counts by ability id (printed by tools/sim_match.gd).
+var cast_counts := {}
+
+
+func on_cast(h: Hero, ab: AbilityData) -> void:
+	cast_counts[ab.id] = cast_counts.get(ab.id, 0) + 1
 	sfx_at("cast", h.position, -6.0)
 
 
@@ -596,6 +643,7 @@ func spawn_area(src: Unit, kind: String, pos: Vector2, radius: float, opts: Dict
 	f.dmg = opts.get("dmg", 0.0)
 	f.slow = opts.get("slow", 0.0)
 	f.root_dur = opts.get("root", 0.0)
+	f.heal_amt = opts.get("heal", 0.0)
 	_add_fx(f, ground_root)
 	return f
 
@@ -635,24 +683,24 @@ func fx_text(pos: Vector2, s: String, col: Color, size := 18) -> void:
 
 
 func fx_ring(pos: Vector2, r0: float, r1: float, col: Color, life := 0.35, width := 4.0) -> void:
-	if not headless:
-		fx.ring(pos, r0, r1, col, life, width)
+	if view != null:
+		view.ring_fx(pos, r0, r1, col, life, clampf(width * 0.018, 0.05, 0.2))
 
 
 func fx_slash(pos: Vector2, dir: Vector2, r: float, col: Color) -> void:
-	if not headless:
-		fx.slash(pos, dir, r, col)
+	if view != null:
+		view.slash_fx(pos, dir, r, col)
 
 
 func fx_beam(a: Vector2, b: Vector2, col: Color, width := 6.0) -> void:
-	if not headless:
-		fx.beam(a, b, col, width)
+	if view != null:
+		view.beam_fx(a, b, col, width)
 
 
 func sfx_at(sound: String, pos: Vector2, vol := 0.0, always := false) -> void:
 	if headless:
 		return
-	if not always and cam.get_screen_center_position().distance_to(pos) > 950.0:
+	if not always and cam_focus.distance_to(pos) > 1000.0:
 		return
 	play_sfx(sound, vol)
 

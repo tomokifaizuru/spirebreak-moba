@@ -44,6 +44,10 @@ var empowered := 0.0
 var recall_t := 0.0
 var haste_t := 0.0
 var haste_amt := 0.0
+## Battle Hunger: attack speed bonus and lifesteal while frenzy_t > 0.
+var frenzy_t := 0.0
+var frenzy_as := 0.0
+var lifesteal := 0.0
 var dash := {}
 var timers: Array = []
 var anim_t := 0.0
@@ -264,6 +268,7 @@ func step(dt: float) -> void:
 	heal_cd -= dt
 	anim_t = maxf(0.0, anim_t - dt)
 	haste_t -= dt
+	frenzy_t -= dt
 	_tick_timers(dt)
 	if not alive:
 		return
@@ -355,7 +360,7 @@ func _move_toward(p: Vector2, dt: float) -> void:
 
 
 func _do_attack(t: Unit) -> void:
-	attack_cd = attack_interval
+	attack_cd = attack_interval / (1.0 + (frenzy_as if frenzy_t > 0.0 else 0.0))
 	anim_t = 0.15
 	stealth_t = 0.0
 	var dmg := attack_damage
@@ -365,13 +370,14 @@ func _do_attack(t: Unit) -> void:
 		empowered = 0.0
 		big = true
 	if data.ranged_attack:
-		var style := "arrow" if data.id == &"kestrel" else "orb"
-		var p := arena.spawn_homing(self, t, dmg, data.projectile_speed, style, facing * radius)
+		var p := arena.spawn_homing(self, t, dmg, data.projectile_speed, data.projectile_style, facing * radius)
 		if big:
 			p.style = "bolt"
 		arena.sfx_at("shoot", position, -4.0)
 	else:
-		t.take_damage(dmg, self)
+		var dealt := t.take_damage(dmg, self)
+		if frenzy_t > 0.0 and lifesteal > 0.0 and dealt > 0.0:
+			heal(dealt * lifesteal)
 		arena.fx_slash(t.position, facing, t.radius + 14.0, Color(1, 0.6, 0.6) if data.id == &"sable" else Color(1, 1, 0.8))
 		arena.sfx_at("hit", position, -4.0)
 
@@ -389,6 +395,8 @@ func respawn() -> void:
 	stealth_t = 0.0
 	untargetable_t = 0.0
 	shield = 0.0
+	frenzy_t = 0.0
+	haste_t = 0.0
 	position = fountain + Vector2(randf_range(-60, 60), randf_range(-60, 60))
 	command_stop()
 	attack_target = null
@@ -407,6 +415,7 @@ func _on_death(_killer: Unit) -> void:
 	dash = {}
 	timers.clear()
 	recall_t = 0.0
+	frenzy_t = 0.0
 	command_stop()
 	aim_preview = {}
 
@@ -678,13 +687,110 @@ func _do_ability(ab: AbilityData, r: int, a: Dictionary, slot: int) -> bool:
 						arena.fx_slash(u2.position, -side, u2.radius + 18.0, Color(1, 0.6, 0.8))
 						arena.sfx_at("hit", position)
 				timers.append({"t": 0.08 + i * 0.22, "f": strike})
+		# ---- Calla, the Bloom Singer ----
+		&"petal_mend":
+			var ally := _ally_target(tgt, a, ab.cast_range)
+			if ally == null:
+				return false
+			var amt := ab.val_at(r)
+			ally.heal(amt)
+			arena.fx_beam(position, ally.position, Color(1.0, 0.6, 0.85), 5.0)
+			arena.fx_ring(ally.position, 10.0, 70.0, Color(0.6, 1.0, 0.7), 0.45, 5.0)
+			arena.fx_text(ally.position + Vector2(0, -40), "+%d" % int(amt), Color(0.5, 1.0, 0.6), 17)
+			arena.sfx_at("heal", ally.position, -4.0)
+		&"bloom_ward":
+			var ally2 := _ally_target(tgt, a, ab.cast_range)
+			if ally2 == null:
+				return false
+			ally2.add_shield(ab.val_at(r), ab.duration)
+			ally2.haste_t = maxf(ally2.haste_t, ab.duration)
+			ally2.haste_amt = maxf(ally2.haste_amt if ally2.haste_t > 0.0 else 0.0, ab.value2)
+			arena.fx_beam(position, ally2.position, Color(1.0, 0.75, 0.9), 4.0)
+			arena.fx_ring(ally2.position, ally2.radius, ally2.radius + 40.0, Color(1.0, 0.7, 0.9), 0.5, 6.0)
+		&"lullaby":
+			var slow := ab.val_at(r)
+			var slow_t2 := ab.duration
+			var song_hit := func(u: Unit, _p: Projectile) -> void:
+				u.take_damage(dmg, self)
+				u.apply_slow(slow, slow_t2)
+			arena.spawn_line(self, position + dir * radius, dir, ab.cast_range, ab.projectile_speed, ab.radius, 0.0, "note", true, song_hit)
+		&"spring_chorus":
+			var f := arena.spawn_area(self, "chorus", position, ab.radius, {"duration": ab.duration, "tick": 0.5, "heal": ab.val_at(r), "slow": ab.value2})
+			f.follow = self
+			arena.fx_ring(position, 20.0, ab.radius, Color(0.6, 1.0, 0.7), 0.5, 6.0)
+		# ---- Rook, the Hammer Knight ----
+		&"quake_swing":
+			_slash(dir, ab.radius, dmg, ab.val_at(r), Color(1.0, 0.75, 0.4))
+			arena.fx_ring(position + dir * 60.0, 20.0, ab.radius * 0.8, Color(1.0, 0.8, 0.45), 0.3, 6.0)
+			arena.sfx_at("hit", position, -2.0)
+		&"iron_leap", &"anvil_fall":
+			if root_t > 0.0:
+				return false
+			if tgt == null and not a["manual"] and ab.is_ultimate:
+				return false
+			var to := point - position
+			var dist := maxf(to.length(), 40.0)
+			var ld := to.normalized() if to.length() > 1.0 else facing
+			var rad3 := ab.radius
+			var ult := ab.is_ultimate
+			var stun3 := ab.duration
+			var slow3 := ab.val_at(r)
+			var shield_per := ab.val_at(r)
+			var land := func() -> void:
+				var heroes_hit := 0
+				for e in arena.enemies_in_radius(team, position, rad3, false):
+					e.take_damage(dmg, self)
+					if ult:
+						e.apply_stun(stun3)
+					else:
+						e.apply_slow(slow3, stun3)
+					if e.kind == Kind.HERO:
+						heroes_hit += 1
+				if ult and heroes_hit > 0:
+					add_shield(shield_per * heroes_hit + max_hp * 0.08, 3.0)
+				arena.fx_ring(position, 20.0, rad3, Color(1.0, 0.8, 0.45), 0.45, 9.0)
+				arena.fx_ring(position, 10.0, rad3 * 0.6, Color(1.0, 0.95, 0.7), 0.3, 5.0)
+				arena.sfx_at("boom", position, -4.0 if ult else -8.0)
+			_start_dash(ld, dist, ab.projectile_speed, {"leap": true, "high": ult, "on_end": land})
+			if ult:
+				untargetable_t = dist / maxf(ab.projectile_speed, 300.0)
+		&"battle_hunger":
+			frenzy_t = ab.duration
+			frenzy_as = ab.val_at(r)
+			lifesteal = ab.value2
+			attack_cd = minf(attack_cd, 0.1)
+			arena.fx_ring(position, radius, radius + 50.0, Color(1.0, 0.55, 0.25), 0.4, 6.0)
 		_:
 			push_warning("Unknown ability id: %s" % ab.id)
 			return false
 	return true
 
 
-func _slash(d: Vector2, rad: float, dmg: float, heal_pct: float) -> void:
+## Friendly hero for heals/shields: the aimed or given ally, else the most wounded ally in range (you included).
+func _ally_target(tgt, a: Dictionary, rng: float) -> Hero:
+	if tgt != null and is_instance_valid(tgt) and tgt is Hero and tgt.team == team and tgt.alive \
+			and position.distance_to(tgt.position) <= rng + 80.0:
+		return tgt
+	var best: Hero = null
+	var bs := INF
+	var aimp: Vector2 = a["point"] if a.get("manual", false) else Vector2.INF
+	for h in arena.heroes:
+		if not h.alive or h.team != team:
+			continue
+		if position.distance_to(h.position) > rng + h.radius:
+			continue
+		var score := h.hp_frac() * 1000.0
+		if arena.time - h.last_hurt_time < 2.0:
+			score -= 150.0
+		if aimp != Vector2.INF:
+			score = aimp.distance_to(h.position)
+		if score < bs:
+			bs = score
+			best = h
+	return best
+
+
+func _slash(d: Vector2, rad: float, dmg: float, heal_pct: float, col := Color(1, 0.45, 0.5)) -> void:
 	var total := 0.0
 	for e in arena.enemies_in_radius(team, position, rad, false):
 		var rel: Vector2 = e.position - position
@@ -693,14 +799,14 @@ func _slash(d: Vector2, rad: float, dmg: float, heal_pct: float) -> void:
 	if heal_pct > 0.0 and total > 0.0:
 		heal(total * heal_pct)
 		arena.fx_text(position + Vector2(0, -radius), "+%d" % int(total * heal_pct), Color(0.5, 1.0, 0.5), 15)
-	arena.fx_slash(position + d * radius, d, rad * 0.7, Color(1, 0.45, 0.5))
+	arena.fx_slash(position + d * radius, d, rad * 0.7, col)
 	facing = d
 
 
 func _start_dash(d: Vector2, dist: float, speed: float, opts: Dictionary) -> void:
 	if d == Vector2.ZERO:
 		d = facing
-	dash = {"dir": d.normalized(), "left": dist, "speed": maxf(speed, 300.0), "hits": {}, "opts": opts}
+	dash = {"dir": d.normalized(), "left": dist, "total": dist, "speed": maxf(speed, 300.0), "hits": {}, "opts": opts}
 	facing = d.normalized()
 	has_move_point = false
 	recall_t = 0.0

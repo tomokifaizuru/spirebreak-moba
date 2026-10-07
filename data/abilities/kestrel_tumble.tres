@@ -8,6 +8,7 @@ id = &"tumble"
 display_name = "Tumble"
 description = "Quick roll; your next basic attack deals +50% damage."
 icon = "tumble"
+aim = "dash"
 cooldown_per_rank = -0.75
 mana_cost = 35.0
 damage = 0.0

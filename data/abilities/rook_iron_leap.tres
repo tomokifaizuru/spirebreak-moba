@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ability_data.gd" id="1_mhvb0"]
+
+[resource]
+script = ExtResource("1_mhvb0")
+id = &"iron_leap"
+display_name = "Iron Leap"
+description = "Leap to a spot; enemies where you land take damage and are slowed."
+icon = "leap"
+aim = "area"
+cooldown = 11.0
+cooldown_per_rank = -0.75
+mana_cost = 55.0
+damage = 70.0
+damage_per_rank = 32.0
+cast_range = 420.0
+radius = 160.0
+duration = 1.5
+value = 0.35
+projectile_speed = 1100.0

@@ -7,9 +7,17 @@ var font: Font
 var config: MatchConfig
 
 
+var diorama: Node3D
+var cam: Camera3D
+var heroes3d: Array[HeroModel] = []
+var hero_timers: Array[float] = []
+var crystals: Array[MeshInstance3D] = []
+
+
 func _ready() -> void:
 	font = ThemeDB.fallback_font
 	config = load("res://data/match_config.tres")
+	_build_diorama()
 	var root := VBoxContainer.new()
 	root.set_anchors_preset(Control.PRESET_CENTER)
 	root.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -18,7 +26,7 @@ func _ready() -> void:
 	root.grow_vertical = Control.GROW_DIRECTION_BOTH
 	add_child(root)
 	var spacer := Control.new()
-	spacer.custom_minimum_size = Vector2(0, 150)
+	spacer.custom_minimum_size = Vector2(0, 330)
 	root.add_child(spacer)
 	var play := MatchHud.make_button("PLAY", Color("f08a2c"), 320.0)
 	play.custom_minimum_size = Vector2(320, 78)
@@ -79,39 +87,105 @@ func _build_how() -> void:
 
 func _on_play() -> void:
 	Sfx.play("click", -4.0)
-	Game.goto_match()
+	Game.goto_hero_select()
 
 
 func _process(delta: float) -> void:
 	t += delta
+	if cam != null:
+		cam.position = Vector3(sin(t * 0.15) * 1.2, 4.0, 9.0)
+		cam.look_at(Vector3(sin(t * 0.15) * 0.4, 1.1, 0), Vector3.UP)
+	for i in heroes3d.size():
+		hero_timers[i] -= delta
+		if hero_timers[i] <= 0.0:
+			hero_timers[i] = randf_range(2.5, 5.0)
+			if randf() < 0.5:
+				heroes3d[i].trigger_attack()
+			else:
+				heroes3d[i].trigger_cast()
+		heroes3d[i].animate(delta, 0.0)
+	for c in crystals:
+		c.rotation.y += delta * 1.2
+		c.position.y = 2.75 + sin(t * 1.8) * 0.08
 	queue_redraw()
+
+
+## Little floating island: lane, river, a tower for each team and the six heroes idling.
+func _build_diorama() -> void:
+	diorama = Node3D.new()
+	add_child(diorama)
+	var env := WorldEnvironment.new()
+	var e := Environment.new()
+	e.background_mode = Environment.BG_COLOR
+	e.background_color = Color("101626")
+	e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	e.ambient_light_color = Color("c9d8ff")
+	e.ambient_light_energy = 0.6
+	env.environment = e
+	diorama.add_child(env)
+	var sun := DirectionalLight3D.new()
+	sun.rotation_degrees = Vector3(-50, -35, 0)
+	sun.light_energy = 1.0
+	diorama.add_child(sun)
+	var b := MeshKit.Builder.new(21)
+	b.add(MeshKit.cyl(6.3, 4.8, 1.4, 11), Color("6b5a44"), MeshKit.xf(Vector3(0, -0.86, 0)), 0.06)
+	b.add(MeshKit.cone(4.6, 2.6, 9), Color("5a4a38"), MeshKit.xf(Vector3(0, -2.6, 0), Vector3(180, 0, 0)), 0.15)
+	b.add(MeshKit.cyl(6.45, 6.4, 0.14, 11), Color("62a845"), MeshKit.xf(Vector3(0, -0.02, 0)))
+	# river across the back, lane across the front
+	b.add(MeshKit.box(13.0, 0.05, 1.2), Color("3d9be0"), MeshKit.xf(Vector3(0, 0.07, -2.6), Vector3(0, 8, 0)))
+	b.add(MeshKit.box(11.0, 0.04, 1.9), Color("dcc092"), MeshKit.xf(Vector3(0, 0.08, 0.9), Vector3(0, -4, 0)))
+	MeshKit.inst(diorama, b.commit())
+	for side in [0, 1]:
+		var x := -4.3 if side == 0 else 4.3
+		var tower := MeshKit.inst(diorama, ModelLib.tower_body(side), MeshKit.xf(Vector3(x, 0.05, -0.6)))
+		tower.scale = Vector3.ONE * 1.1
+		var cm := StandardMaterial3D.new()
+		cm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		cm.albedo_color = Art.team_color(side).lightened(0.25)
+		var cr := MeshKit.inst(diorama, ModelLib.crystal(), MeshKit.xf(Vector3(x, 2.75, -0.6), Vector3.ZERO, Vector3.ONE * 0.46), cm)
+		crystals.append(cr)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 12
+	for i in 16:
+		var a := deg_to_rad(200.0 + i * 9.0 + rng.randf_range(-3, 3))
+		var r := rng.randf_range(4.6, 6.0)
+		var s := rng.randf_range(0.9, 1.5)
+		MeshKit.inst(diorama, ModelLib.tree() if i % 4 != 0 else ModelLib.bush_tree(), MeshKit.xf(Vector3(cos(a) * r, 0.0, sin(a) * r), Vector3(0, rng.randf() * 360.0, 0), Vector3.ONE * s))
+	for i in 14:
+		var p := Vector2(rng.randf_range(-5.0, 5.0), rng.randf_range(1.8, 4.5))
+		MeshKit.inst(diorama, ModelLib.flower() if i % 2 == 0 else ModelLib.tuft(), MeshKit.xf(Vector3(p.x, 0.05, p.y), Vector3(0, rng.randf() * 360.0, 0), Vector3.ONE * 1.4))
+	var roster: Array = config.roster if config != null else []
+	for i in roster.size():
+		var d: HeroData = roster[i]
+		var team := 0 if i < 3 else 1
+		var m := HeroModel.new().build(d, team)
+		m.scale *= 1.25
+		var x2 := (i - (roster.size() - 1) * 0.5) * 1.25
+		m.position = Vector3(x2, 0.1, 1.0 + absf(x2) * -0.08)
+		m.rotation.y = -x2 * 0.08
+		diorama.add_child(m)
+		heroes3d.append(m)
+		hero_timers.append(randf_range(0.5, 3.0))
+		var sh := MeshKit.decal(Color(0, 0, 0, 0.35), 1.0, 0.0, 1)
+		sh.position = m.position + Vector3(0, 0.02, 0)
+		sh.scale = Vector3.ONE * 0.55
+		diorama.add_child(sh)
+	cam = Camera3D.new()
+	cam.fov = 40.0
+	cam.near = 0.5
+	cam.far = 60.0
+	diorama.add_child(cam)
+	cam.current = true
 
 
 func _draw() -> void:
 	var s := size
-	draw_rect(Rect2(Vector2.ZERO, s), Color("0f1320"))
-	# Diagonal map silhouette: river and lane
-	var k := s.y / 5100.0
-	var o := Vector2(s.x * 0.5 - 2550.0 * k, 0)
-	draw_line(o + Vector2(-300, -300) * k, o + Vector2(5400, 5400) * k, Color(0.24, 0.6, 0.88, 0.16), 120.0 * k * 1.8)
-	var lane := PackedVector2Array()
-	for p in [Vector2(640, 4460), Vector2(1120, 4120), Vector2(1650, 3870), Vector2(1950, 3380), Vector2(2230, 2880), Vector2(2550, 2550), Vector2(2880, 2230), Vector2(3380, 1950), Vector2(3870, 1650), Vector2(4120, 1120), Vector2(4460, 640)]:
-		lane.append(o + p * k)
-	draw_polyline(ArenaMap.smooth(lane, 8), Color(0.85, 0.72, 0.54, 0.16), 260.0 * k, true)
-	# Glows behind the two Heartspires
-	var dawn := Vector2(s.x * 0.16, s.y * 0.72)
-	var dusk := Vector2(s.x * 0.84, s.y * 0.30)
-	for i in 6:
-		draw_circle(dawn, 150.0 - i * 20.0, Color(0.24, 0.6, 1.0, 0.04))
-		draw_circle(dusk, 150.0 - i * 20.0, Color(1.0, 0.3, 0.37, 0.04))
-	var pulse := sin(t * 2.0)
-	Art.draw_heartspire(self, dawn, 62.0, 0, true, pulse)
-	Art.draw_heartspire(self, dusk, 62.0, 1, true, -pulse)
-	# Title
+	# soft dark band behind the title so it reads over the 3D scene
+	draw_rect(Rect2(0, 0, s.x, s.y * 0.36), Color(0.04, 0.05, 0.09, 0.35))
 	var title := Game.title.to_upper()
 	var tsz := 96
 	var tw := font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, tsz).x
-	var tp := Vector2(s.x * 0.5 - tw * 0.5, s.y * 0.25)
+	var tp := Vector2(s.x * 0.5 - tw * 0.5, s.y * 0.2)
 	draw_string_outline(font, tp + Vector2(0, 6), title, HORIZONTAL_ALIGNMENT_LEFT, -1, tsz, 22, Color(0, 0, 0, 0.5))
 	draw_string_outline(font, tp, title, HORIZONTAL_ALIGNMENT_LEFT, -1, tsz, 16, Color("1b2236"))
 	var half := title.length() / 2
@@ -119,30 +193,15 @@ func _draw() -> void:
 	var lw := font.get_string_size(left, HORIZONTAL_ALIGNMENT_LEFT, -1, tsz).x
 	draw_string(font, tp, left, HORIZONTAL_ALIGNMENT_LEFT, -1, tsz, Color("7cc0ff"))
 	draw_string(font, tp + Vector2(lw, 0), title.substr(half), HORIZONTAL_ALIGNMENT_LEFT, -1, tsz, Color("ff7d8a"))
-	var sub := "3v3 hero brawls  ·  one lane  ·  Team Dawn vs Team Dusk"
+	var ver := "v" + Game.version
+	var vw := font.get_string_size(ver, HORIZONTAL_ALIGNMENT_LEFT, -1, 26).x
+	var vr := Rect2(tp.x + tw + 10.0, tp.y - 78.0, vw + 22.0, 36.0)
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color("f08a2c")
+	sb.set_corner_radius_all(10)
+	draw_style_box(sb, vr)
+	draw_string(font, vr.position + Vector2(11, 27), ver, HORIZONTAL_ALIGNMENT_LEFT, -1, 26, Color.WHITE)
+	var sub := "3v3 hero brawls  ·  one lane  ·  6 heroes  ·  Team Dawn vs Team Dusk"
 	var sw := font.get_string_size(sub, HORIZONTAL_ALIGNMENT_LEFT, -1, 22).x
-	draw_string(font, Vector2(s.x * 0.5 - sw * 0.5, s.y * 0.25 + 40.0), sub, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color(1, 1, 1, 0.75))
-	# Team line-up
-	if config != null:
-		var dawn_team: Array = [config.player_hero] + config.dawn_bots
-		_draw_lineup(dawn_team, Vector2(s.x * 0.5 - 330.0, s.y * 0.86), 0)
-		_draw_lineup(config.dusk_bots, Vector2(s.x * 0.5 + 330.0, s.y * 0.86), 1)
-		var vs := "VS"
-		draw_string_outline(font, Vector2(s.x * 0.5 - 18.0, s.y * 0.86 + 12.0), vs, HORIZONTAL_ALIGNMENT_LEFT, -1, 32, 8, Color(0, 0, 0, 0.6))
-		draw_string(font, Vector2(s.x * 0.5 - 18.0, s.y * 0.86 + 12.0), vs, HORIZONTAL_ALIGNMENT_LEFT, -1, 32, Art.GOLD)
-
-
-func _draw_lineup(list: Array, center: Vector2, team: int) -> void:
-	var n := list.size()
-	for i in n:
-		var d: HeroData = list[i]
-		var c := center + Vector2((i - (n - 1) * 0.5) * 96.0, 0)
-		var bob := sin(t * 2.2 + i + team * 2.0) * 3.0
-		draw_circle(c + Vector2(0, bob), 38.0, Color(Art.team_color(team), 0.25))
-		var ring := Art.PLAYER if (team == 0 and i == 0) else Art.team_color(team)
-		draw_arc(c + Vector2(0, bob), 38.0, 0, TAU, 40, ring, 3.0, true)
-		Art.draw_hero(self, d.id, c + Vector2(0, bob), 28.0, Vector2(0, 0.6))
-		var nm := ("You: " if team == 0 and i == 0 else "") + d.display_name
-		var w := font.get_string_size(nm, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
-		draw_string_outline(font, c + Vector2(-w * 0.5, 58.0), nm, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, 4, Color(0, 0, 0, 0.7))
-		draw_string(font, c + Vector2(-w * 0.5, 58.0), nm, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color.WHITE)
+	draw_string_outline(font, Vector2(s.x * 0.5 - sw * 0.5, s.y * 0.2 + 40.0), sub, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, 5, Color(0, 0, 0, 0.6))
+	draw_string(font, Vector2(s.x * 0.5 - sw * 0.5, s.y * 0.2 + 40.0), sub, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color(1, 1, 1, 0.85))

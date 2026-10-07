@@ -8,6 +8,7 @@ id = &"rootcall_roar"
 display_name = "Rootcall Roar"
 description = "Nearby enemies are forced to attack you for 1.5 s."
 icon = "roar"
+aim = "self"
 cooldown = 14.0
 cooldown_per_rank = -1.0
 mana_cost = 60.0

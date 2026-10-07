@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="HeroData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ability_data.gd" id="1_nl8oo"]
+[ext_resource type="Resource" path="res://data/abilities/rook_quake_swing.tres" id="2_yeun4"]
+[ext_resource type="Resource" path="res://data/abilities/rook_iron_leap.tres" id="3_i8mk1"]
+[ext_resource type="Resource" path="res://data/abilities/rook_battle_hunger.tres" id="4_k6t33"]
+[ext_resource type="Resource" path="res://data/abilities/rook_anvil_fall.tres" id="5_t2jy6"]
+[ext_resource type="Script" path="res://scripts/data/hero_data.gd" id="6_uu82i"]
+
+[resource]
+script = ExtResource("6_uu82i")
+id = &"rook"
+display_name = "Rook"
+title = "the Hammer Knight"
+role = 5
+tagline = "Hammer knight who leaps in and heals by hitting hard."
+difficulty = 2
+body_color = Color(0.5411765, 0.5764706, 0.6509804, 1)
+accent_color = Color(1, 0.6039216, 0.23529412, 1)
+detail_color = Color(1, 0.8784314, 0.5411765, 1)
+model_scale = 1.08
+max_hp = 820.0
+hp_per_level = 90.0
+hp_regen = 2.8
+max_mana = 300.0
+mana_per_level = 28.0
+mana_regen = 2.2
+armor = 14.0
+armor_per_level = 1.5
+move_speed = 305.0
+attack_damage = 56.0
+attack_damage_per_level = 4.4
+attack_range = 80.0
+attack_interval = 1.0
+ranged_attack = false
+projectile_speed = 0.0
+abilities = Array[ExtResource("1_nl8oo")]([ExtResource("2_yeun4"), ExtResource("3_i8mk1"), ExtResource("4_k6t33"), ExtResource("5_t2jy6")])
+skill_priority = PackedInt32Array(0, 1, 2)

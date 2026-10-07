@@ -139,10 +139,10 @@ func _show_result(winner: int) -> void:
 	var t := int(arena.time)
 	result_box.add_child(make_label("%s  ·  %02d:%02d" % [arena.end_reason, t / 60, t % 60], 20, Color(1, 1, 1, 0.8)))
 	var grid := GridContainer.new()
-	grid.columns = 6
-	grid.add_theme_constant_override("h_separation", 26)
+	grid.columns = 7
+	grid.add_theme_constant_override("h_separation", 22)
 	grid.add_theme_constant_override("v_separation", 4)
-	for h in ["", "Hero", "Lv", "K / D / A", "Last hits", "Gold"]:
+	for h in ["", "Hero", "Role", "Lv", "K / D / A", "Last hits", "Gold"]:
 		grid.add_child(make_label(h, 16, Color(1, 1, 1, 0.55)))
 	for team in [0, 1]:
 		for hero in arena.heroes:
@@ -151,6 +151,7 @@ func _show_result(winner: int) -> void:
 			var tc := Art.team_color(team)
 			grid.add_child(make_label("DAWN" if team == 0 else "DUSK", 15, tc))
 			grid.add_child(make_label(("You · " if hero.is_player else "") + hero.display_name, 18, Art.PLAYER if hero.is_player else Color.WHITE))
+			grid.add_child(make_label(hero.data.role_name(), 15, hero.data.role_color()))
 			grid.add_child(make_label(str(hero.level), 18))
 			grid.add_child(make_label("%d / %d / %d" % [hero.kills, hero.deaths, hero.assists], 18))
 			grid.add_child(make_label(str(hero.last_hits), 18))
@@ -170,7 +171,7 @@ func _show_result(winner: int) -> void:
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	row.add_theme_constant_override("separation", 20)
 	var again := make_button("Play Again", Color("2f9d5a"), 240.0)
-	again.pressed.connect(func() -> void: _game().goto_match())
+	again.pressed.connect(func() -> void: _game().restart_match())
 	row.add_child(again)
 	var menu := make_button("Main Menu", Color("4a4f63"), 240.0)
 	menu.pressed.connect(func() -> void: _game().goto_title())

@@ -8,6 +8,7 @@ id = &"smoke_veil"
 display_name = "Smoke Veil"
 description = "Turn invisible and move 30% faster for 2 s."
 icon = "smoke"
+aim = "self"
 cooldown = 15.0
 cooldown_per_rank = -1.0
 damage = 0.0

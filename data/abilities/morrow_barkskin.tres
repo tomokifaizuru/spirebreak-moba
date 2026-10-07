@@ -8,6 +8,7 @@ id = &"barkskin"
 display_name = "Barkskin"
 description = "Gain a shield worth 15% max HP for 3 s."
 icon = "shield"
+aim = "self"
 cooldown = 12.0
 cooldown_per_rank = -0.75
 mana_cost = 45.0

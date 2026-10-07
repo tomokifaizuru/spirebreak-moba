@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ability_data.gd" id="1_dsci0"]
+
+[resource]
+script = ExtResource("1_dsci0")
+id = &"petal_mend"
+display_name = "Petal Mend"
+description = "Heal the most wounded ally nearby (or yourself)."
+icon = "mend"
+aim = "ally"
+cooldown = 7.5
+mana_cost = 55.0
+damage = 0.0
+damage_per_rank = 0.0
+cast_range = 640.0
+radius = 0.0
+duration = 0.0
+value = 170.0
+value_per_rank = 55.0

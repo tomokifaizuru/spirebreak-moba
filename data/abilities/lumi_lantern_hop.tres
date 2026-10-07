@@ -8,6 +8,7 @@ id = &"lantern_hop"
 display_name = "Lantern Hop"
 description = "Short blink that leaves a slowing glow behind."
 icon = "hop"
+aim = "dash"
 cooldown = 12.0
 cooldown_per_rank = -1.0
 mana_cost = 60.0

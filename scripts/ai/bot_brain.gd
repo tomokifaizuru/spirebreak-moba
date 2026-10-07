@@ -7,6 +7,7 @@ extends RefCounted
 ##   FARM     enemy creeps nearby -> last-hit / clear the wave
 ##   PUSH     a vulnerable enemy building and creeps tanking it -> hit the building
 ##   LANE     otherwise walk to a spot just behind the allied creep wave
+## Supports (Calla) also heal / shield hurt allies first and follow a teammate instead of the wave.
 
 var hero: Hero
 var think_t := 0.0
@@ -76,6 +77,8 @@ func _decide() -> void:
 		if hpf < retreat_hp or (hpf < 0.5 and threat > 1.5) \
 				or (h.mana < h.max_mana * 0.1 and hpf < 0.55 and not enemies.is_empty()):
 			retreating = true
+	if _support_actions():
+		return
 	if retreating:
 		state = "retreat"
 		_retreat(enemies)
@@ -144,7 +147,7 @@ func _should_push(allies: Array) -> bool:
 
 func _tower_safe(s: Structure) -> bool:
 	if s.target == hero:
-		if pushing and hero.data.role == 0 and hero.hp_frac() > 0.55:
+		if pushing and hero.data.is_frontline() and hero.hp_frac() > 0.55:
 			return true
 		return s.hp_frac() < 0.1 and hero.hp_frac() > 0.55
 	if pushing and hero.hp_frac() > 0.45:
@@ -286,6 +289,29 @@ func _use_skills(t: Hero) -> void:
 			&"hawk_mark":
 				if d < ab.cast_range:
 					used = _cast_on(slot, t)
+			&"petal_mend", &"bloom_ward":
+				pass  # handled by _support_actions()
+			&"spring_chorus":
+				var hurt := 0
+				for x in a.heroes_near(h.position, ab.radius, h.team, false):
+					if (x as Hero).hp_frac() < 0.7:
+						hurt += 1
+				var foes := a.heroes_near(h.position, ab.radius, h.team, true).size()
+				if hurt >= 2 or (hurt >= 1 and foes >= 2):
+					used = h.cast(slot)
+			&"quake_swing":
+				if d < ab.radius + t.radius:
+					used = _cast_on(slot, t)
+			&"iron_leap":
+				if (d > h.attack_reach(t) + 40.0 and d < ab.cast_range + 40.0) or (t.hp_frac() < 0.3 and d < ab.cast_range):
+					used = _cast_on(slot, t)
+			&"battle_hunger":
+				if d < h.attack_reach(t) + 80.0:
+					used = h.cast(slot)
+			&"anvil_fall":
+				var crowd2 := a.heroes_near(t.position, ab.radius + 40.0, h.team, true).size()
+				if d < ab.cast_range and (t.hp_frac() < 0.55 or crowd2 >= 2):
+					used = _cast_on(slot, t)
 			_:
 				if d < ab.cast_range + t.radius:
 					used = _cast_on(slot, t)
@@ -304,7 +330,7 @@ func _use_wave_skills(c: Unit) -> void:
 		if not h.can_cast(slot):
 			continue
 		var id: StringName = h.data.abilities[slot].id
-		if id in [&"piercing_bolt", &"wisp_bolt", &"star_snare", &"twin_fang"]:
+		if id in [&"piercing_bolt", &"wisp_bolt", &"star_snare", &"twin_fang", &"lullaby", &"quake_swing"]:
 			if h.position.distance_to(c.position) <= h.data.abilities[slot].cast_range:
 				if _cast_on(slot, c):
 					return
@@ -328,8 +354,11 @@ func _retreat(enemies: Array) -> void:
 			if not h.can_cast(slot):
 				continue
 			var id: StringName = h.data.abilities[slot].id
-			if id == &"tumble" or id == &"lantern_hop":
+			if id == &"tumble" or id == &"lantern_hop" or id == &"iron_leap":
 				if h.cast(slot, {"dir": away}):
+					break
+			elif id == &"lullaby" and closest != null:
+				if h.cast(slot, {"target": closest}):
 					break
 			elif id == &"smoke_veil" or id == &"barkskin":
 				if h.cast(slot):
@@ -347,9 +376,68 @@ func _retreat(enemies: Array) -> void:
 		h.command_move(h.fountain)
 
 
+## Support only: heal / shield a hurt ally (or yourself). Returns true if a skill was used.
+func _support_actions() -> bool:
+	var h := hero
+	if h.data.role != 4:
+		return false
+	for slot in [0, 1, 2]:
+		if not h.can_cast(slot) or randf() > skill_chance + 0.1:
+			continue
+		var ab: AbilityData = h.data.abilities[slot]
+		if ab.id == &"petal_mend":
+			var t := _hurt_ally(ab.cast_range, 0.62, false)
+			if t != null and h.cast(slot, {"target": t}):
+				return true
+		elif ab.id == &"bloom_ward":
+			var t2 := _hurt_ally(ab.cast_range, 0.8, true)
+			if t2 != null and h.cast(slot, {"target": t2}):
+				return true
+	return false
+
+
+## Most wounded allied hero (you included) in range below `below` HP. under_fire = hit in the last 1.2 s.
+func _hurt_ally(rng: float, below: float, under_fire: bool) -> Hero:
+	var a := _arena()
+	var best: Hero = null
+	var bf := below
+	for x in a.heroes_near(hero.position, rng, hero.team, false):
+		var u: Hero = x
+		if under_fire and a.time - u.last_hurt_time > 1.2:
+			continue
+		if u.hp_frac() < bf:
+			bf = u.hp_frac()
+			best = u
+	return best
+
+
+## Support only: the teammate to stay with (alive, not going home), else null.
+func _buddy() -> Hero:
+	var a := _arena()
+	var best: Hero = null
+	var bd := 2600.0
+	for x in a.heroes:
+		var u: Hero = x
+		if u == hero or not u.alive or u.team != hero.team or u.brain.retreating:
+			continue
+		var d := hero.position.distance_to(u.position)
+		if u.brain.state == "fight":
+			d -= 800.0
+		if d < bd:
+			bd = d
+			best = u
+	return best
+
+
 func _lane_spot() -> Vector2:
 	var h := hero
 	var a := _arena()
+	if h.data.role == 4:
+		var b := _buddy()
+		if b != null:
+			# Stand a little behind the teammate (towards our base).
+			var bp := a.team_progress(h.team, b.position)
+			return a.lane_point(h.team, bp - 140.0) + (b.position - a.lane_point(h.team, bp)) * 0.5
 	var ranged := h.data.ranged_attack
 	var front: float = a.fronts[h.team]
 	var spot := 0.0

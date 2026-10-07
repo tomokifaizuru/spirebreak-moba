@@ -6,18 +6,24 @@ extends Node
 const SETTINGS_PATH := "user://settings.cfg"
 const TITLE_SCENE := "res://scenes/title.tscn"
 const MATCH_SCENE := "res://scenes/match.tscn"
+const SELECT_SCENE := "res://scenes/hero_select.tscn"
+const CONFIG_PATH := "res://data/match_config.tres"
 
 var title := "Spirebreak"
-var version := "0.1"
+var version := "0.2"
 var sfx_volume := 0.8
 ## Debug flags from the command line (-- autopilot speed=4) or the web URL (#autopilot&speed=4).
 var debug_args := {}
+## The hero picked on the hero select screen (null until you pick one).
+var selected_hero: HeroData = null
+## Teams for the next match, built by start_match(). Empty = use match_config.tres defaults.
+var next_lineup := {}
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	title = str(ProjectSettings.get_setting("application/config/name", "Spirebreak"))
-	version = str(ProjectSettings.get_setting("application/config/version", "0.1"))
+	version = str(ProjectSettings.get_setting("application/config/version", "0.2"))
 	_read_debug_args()
 	_load_settings()
 	_apply_volume()
@@ -63,6 +69,33 @@ func _apply_volume() -> void:
 func goto_title() -> void:
 	get_tree().paused = false
 	get_tree().call_deferred("change_scene_to_file", TITLE_SCENE)
+
+
+func goto_hero_select() -> void:
+	get_tree().paused = false
+	get_tree().call_deferred("change_scene_to_file", SELECT_SCENE)
+
+
+func roster() -> Array:
+	var cfg: MatchConfig = load(CONFIG_PATH)
+	return cfg.roster
+
+
+## Builds fresh random bot teams around `hero` and loads the match.
+func start_match(hero: HeroData) -> void:
+	selected_hero = hero
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	next_lineup = Lineup.build(hero, roster(), rng)
+	goto_match()
+
+
+## Play Again: same hero, new bot teams.
+func restart_match() -> void:
+	if selected_hero != null:
+		start_match(selected_hero)
+	else:
+		goto_match()
 
 
 func goto_match() -> void:

@@ -8,6 +8,7 @@ id = &"star_snare"
 display_name = "Star Snare"
 description = "Mark a circle; after 0.6 s enemies inside are rooted."
 icon = "snare"
+aim = "area"
 cooldown = 10.0
 mana_cost = 70.0
 damage = 70.0

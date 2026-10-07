@@ -82,8 +82,6 @@ z_index = 5
 [node name="Fx" type="Node2D" parent="."]
 script = ExtResource("4_fx")
 
-[node name="Camera" type="Camera2D" parent="."]
-
 [node name="HUD" type="CanvasLayer" parent="."]
 script = ExtResource("5_hud")
 '''

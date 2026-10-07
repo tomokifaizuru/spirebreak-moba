@@ -9,6 +9,7 @@ display_name = "Hundred Petals"
 description = "Become untargetable and blink-strike up to 5 nearby enemies."
 icon = "petals"
 is_ultimate = true
+aim = "self"
 cooldown = 50.0
 cooldown_per_rank = -6.0
 mana_cost = 100.0

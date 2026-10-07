@@ -8,6 +8,7 @@ id = &"hawk_mark"
 display_name = "Hawk Mark"
 description = "Mark a target: revealed and takes +15% damage for 4 s."
 icon = "mark"
+aim = "target"
 cooldown = 12.0
 cooldown_per_rank = -1.0
 mana_cost = 40.0

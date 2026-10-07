@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ability_data.gd" id="1_2jma6"]
+
+[resource]
+script = ExtResource("1_2jma6")
+id = &"spring_chorus"
+display_name = "Spring Chorus"
+description = "Sing for 2.5 s: allies around you heal every half second, enemies are slowed."
+icon = "chorus"
+is_ultimate = true
+aim = "self"
+cooldown = 65.0
+cooldown_per_rank = -8.0
+mana_cost = 120.0
+damage = 0.0
+damage_per_rank = 0.0
+cast_range = 0.0
+radius = 440.0
+duration = 2.5
+value = 85.0
+value_per_rank = 40.0
+value2 = 0.3

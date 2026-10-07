@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ability_data.gd" id="1_3mp7p"]
+
+[resource]
+script = ExtResource("1_3mp7p")
+id = &"lullaby"
+display_name = "Lullaby"
+description = "A wave of song that hits every enemy in a line and slows them by 40%."
+icon = "lullaby"
+cooldown = 10.0
+cooldown_per_rank = -0.75
+mana_cost = 65.0
+damage = 85.0
+damage_per_rank = 40.0
+cast_range = 650.0
+radius = 60.0
+duration = 1.8
+value = 0.4
+value_per_rank = 0.05
+projectile_speed = 900.0

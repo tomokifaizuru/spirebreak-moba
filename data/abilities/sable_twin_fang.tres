@@ -8,6 +8,7 @@ id = &"twin_fang"
 display_name = "Twin Fang"
 description = "Two quick slashes; the second one heals you."
 icon = "fang"
+aim = "self"
 cooldown = 6.0
 cooldown_per_rank = -0.4
 mana_cost = 40.0

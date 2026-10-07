@@ -131,6 +131,37 @@ static func draw_hero(ci: CanvasItem, id: StringName, c: Vector2, r: float, f :=
 			ci.draw_line(hc3 + Vector2(-r * 0.35, -r * 0.05), hc3 + Vector2(-r * 0.12, 0.0), Color("d8263f", a), 3.0)
 			ci.draw_line(hc3 + Vector2(r * 0.35, -r * 0.05), hc3 + Vector2(r * 0.12, 0.0), Color("d8263f", a), 3.0)
 			ci.draw_circle(hc3 + Vector2(0, r * 0.45), r * 0.07, Color(0.1, 0.1, 0.1, a))
+		&"calla":
+			# Bloom Singer: mint hair, pink petal crown, golden bell staff.
+			ci.draw_circle(c, r, Color("ff8fc8", a))
+			for i in 8:
+				ci.draw_circle(c + Vector2.from_angle(i * TAU / 8.0) * r * 0.82, r * 0.22, Color("ffb3dc", a))
+			var hc4 := c + lean * 1.6 + Vector2(0, r * 0.1)
+			ci.draw_circle(hc4, r * 0.6, Color("6fd08c", a))
+			ci.draw_circle(hc4 + Vector2(0, r * 0.1), r * 0.44, Color("ffe4d4", a))
+			ci.draw_circle(hc4 + Vector2(-r * 0.16, r * 0.1), r * 0.075, Color(0.15, 0.12, 0.2, a))
+			ci.draw_circle(hc4 + Vector2(r * 0.16, r * 0.1), r * 0.075, Color(0.15, 0.12, 0.2, a))
+			ci.draw_arc(hc4 + Vector2(0, r * 0.26), r * 0.1, 0.4, PI - 0.4, 8, Color(0.75, 0.3, 0.4, a), 2.0)
+			for i in 5:
+				ci.draw_colored_polygon(ellipse_pts(hc4 + Vector2((i - 2) * r * 0.2, -r * 0.48 - absf(i - 2) * -r * 0.04), r * 0.12, r * 0.2), Color("ff6fb8", a))
+			ci.draw_circle(hc4 + Vector2(0, -r * 0.5), r * 0.1, Color("ffd84a", a))
+			var bs := c + Vector2(r * 0.95, -r * 0.05)
+			ci.draw_line(bs + Vector2(0, r * 0.7), bs + Vector2(0, -r * 0.45), Color("c9a86a", a), 3.0)
+			ci.draw_colored_polygon(pie_pts(bs + Vector2(0, -r * 0.4), r * 0.24, PI, TAU), Color("ffd84a", a))
+		&"rook":
+			# Hammer Knight: grey helm with visor slit and orange plume, big hammer.
+			ci.draw_circle(c, r, Color("ff9a3c", a))
+			var hc5 := c + lean * 1.5
+			ci.draw_circle(hc5, r * 0.66, Color("b7bdcb", a))
+			ci.draw_colored_polygon(pie_pts(hc5, r * 0.66, PI, TAU), Color("cfd4de", a))
+			ci.draw_rect(Rect2(hc5 + Vector2(-r * 0.46, -r * 0.02), Vector2(r * 0.92, r * 0.16)), Color(0.1, 0.1, 0.13, a))
+			ci.draw_circle(hc5 + Vector2(-r * 0.18, r * 0.06), r * 0.05, Color("ffe08a", a))
+			ci.draw_circle(hc5 + Vector2(r * 0.18, r * 0.06), r * 0.05, Color("ffe08a", a))
+			ci.draw_colored_polygon(ellipse_pts(hc5 + Vector2(0, -r * 0.72), r * 0.16, r * 0.3), Color("ff7a1c", a))
+			var hm := c + Vector2(r * 0.9, -r * 0.3)
+			ci.draw_line(hm + Vector2(-r * 0.2, r * 0.9), hm, Color("7a5232", a), 3.0)
+			ci.draw_rect(Rect2(hm + Vector2(-r * 0.3, -r * 0.22), Vector2(r * 0.6, r * 0.36)), Color("8e95a6", a))
+			ci.draw_rect(Rect2(hm + Vector2(-r * 0.3, -r * 0.22), Vector2(r * 0.1, r * 0.36)), Color("ffcf4a", a))
 		_:
 			ci.draw_circle(c, r, Color(0.8, 0.8, 0.8, a))
 	outline_circle(ci, c, r, Color(0.07, 0.08, 0.1, 0.9 * a), 2.0)
@@ -204,6 +235,43 @@ static func draw_icon(ci: CanvasItem, icon: String, c: Vector2, s: float, col :=
 				var d := Vector2.from_angle(i * TAU / 5.0)
 				ci.draw_colored_polygon(ellipse_pts(c + d * s * 0.42, s * 0.36, s * 0.16), col)
 			ci.draw_circle(c, s * 0.18, col)
+		"mend":
+			ci.draw_colored_polygon(ellipse_pts(c + Vector2(-s * 0.25, s * 0.1), s * 0.3, s * 0.55), col)
+			ci.draw_colored_polygon(ellipse_pts(c + Vector2(s * 0.25, s * 0.1), s * 0.3, s * 0.55), col)
+			ci.draw_rect(Rect2(c + Vector2(-s * 0.08, -s * 0.85), Vector2(s * 0.16, s * 0.5)), col)
+			ci.draw_rect(Rect2(c + Vector2(-s * 0.25, -s * 0.68), Vector2(s * 0.5, s * 0.16)), col)
+		"ward":
+			ci.draw_arc(c, s * 0.75, 0, TAU, 24, col, w)
+			for i in 4:
+				ci.draw_circle(c + Vector2.from_angle(i * PI * 0.5 + PI * 0.25) * s * 0.28, s * 0.22, col)
+		"lullaby":
+			ci.draw_circle(c + Vector2(-s * 0.35, s * 0.45), s * 0.25, col)
+			ci.draw_circle(c + Vector2(s * 0.45, s * 0.3), s * 0.25, col)
+			ci.draw_line(c + Vector2(-s * 0.12, s * 0.45), c + Vector2(-s * 0.12, -s * 0.6), col, w)
+			ci.draw_line(c + Vector2(s * 0.68, s * 0.3), c + Vector2(s * 0.68, -s * 0.75), col, w)
+			ci.draw_line(c + Vector2(-s * 0.12, -s * 0.6), c + Vector2(s * 0.68, -s * 0.75), col, w * 1.4)
+		"chorus":
+			ci.draw_arc(c, s * 0.8, 0, TAU, 24, col, w * 0.8)
+			ci.draw_circle(c + Vector2(-s * 0.1, s * 0.25), s * 0.22, col)
+			ci.draw_line(c + Vector2(s * 0.1, s * 0.25), c + Vector2(s * 0.1, -s * 0.5), col, w)
+			ci.draw_line(c + Vector2(s * 0.1, -s * 0.5), c + Vector2(s * 0.4, -s * 0.3), col, w)
+		"quake":
+			ci.draw_arc(c + Vector2(0, s * 0.3), s * 0.8, PI * 1.1, PI * 1.9, 14, col, w * 1.3)
+			ci.draw_rect(Rect2(c + Vector2(-s * 0.3, -s * 0.15), Vector2(s * 0.6, s * 0.35)), col)
+			ci.draw_line(c + Vector2(0, s * 0.2), c + Vector2(0, s * 0.85), col, w)
+		"leap":
+			ci.draw_arc(c + Vector2(0, s * 0.6), s * 0.75, PI * 1.05, PI * 1.95, 14, col, w)
+			var e2 := c + Vector2(s * 0.72, s * 0.45)
+			ci.draw_colored_polygon(PackedVector2Array([e2 + Vector2(s * 0.1, s * 0.3), e2 + Vector2(-s * 0.28, 0), e2 + Vector2(s * 0.22, -s * 0.1)]), col)
+			ci.draw_line(c + Vector2(-s * 0.8, s * 0.8), c + Vector2(s * 0.8, s * 0.8), col, w * 0.8)
+		"hunger":
+			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(0, s * 0.8), c + Vector2(-s * 0.7, -s * 0.05), c + Vector2(-s * 0.4, -s * 0.6), c + Vector2(0, -s * 0.3), c + Vector2(s * 0.4, -s * 0.6), c + Vector2(s * 0.7, -s * 0.05)]), col)
+			ci.draw_line(c + Vector2(-s * 0.2, -s * 0.1), c + Vector2(s * 0.15, s * 0.2), Color(0, 0, 0, 0.5), w)
+		"anvil":
+			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(-s * 0.8, -s * 0.45), c + Vector2(s * 0.8, -s * 0.45), c + Vector2(s * 0.5, -s * 0.1), c + Vector2(s * 0.25, -s * 0.1), c + Vector2(s * 0.35, s * 0.3), c + Vector2(-s * 0.35, s * 0.3), c + Vector2(-s * 0.25, -s * 0.1), c + Vector2(-s * 0.5, -s * 0.1)]), col)
+			ci.draw_rect(Rect2(c + Vector2(-s * 0.5, s * 0.35), Vector2(s * 1.0, s * 0.2)), col)
+			for i in 3:
+				ci.draw_line(c + Vector2((i - 1) * s * 0.4, -s * 0.95), c + Vector2((i - 1) * s * 0.4, -s * 0.6), col, w * 0.7)
 		"attack_bow":
 			ci.draw_arc(c + Vector2(-s * 0.2, 0), s * 0.8, -1.2, 1.2, 14, col, w)
 			ci.draw_line(c + Vector2(-s * 0.2, 0) + Vector2.from_angle(-1.2) * s * 0.8, c + Vector2(-s * 0.2, 0) + Vector2.from_angle(1.2) * s * 0.8, col, 1.5)

@@ -12,6 +12,10 @@ extends Resource
 @export var icon := "bolt"
 ## Ultimates unlock at hero level 4 and rank up at 8 and 12.
 @export var is_ultimate := false
+## How the aim indicator looks while you drag the button:
+## line = skillshot, area = circle at the aimed point, self = circle around you,
+## dash = movement arrow, target = enemy unit, ally = friendly hero.
+@export_enum("line", "area", "self", "dash", "target", "ally") var aim := "line"
 
 @export_group("Cost and cooldown")
 ## Seconds between casts at rank 1.
@@ -36,6 +40,8 @@ extends Resource
 @export var value := 0.0
 ## Change of `value` per rank above 1.
 @export var value_per_rank := 0.0
+## A second number for skills with two effects (Bloom Ward haste, Battle Hunger lifesteal, Spring Chorus slow).
+@export var value2 := 0.0
 ## Wind-up before an area goes off (Star Snare, Night Bloom).
 @export var delay := 0.0
 ## Projectile speed for skills that fire one; dash speed for dashes.

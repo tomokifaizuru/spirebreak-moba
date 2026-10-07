@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ability_data.gd" id="1_w7hor"]
+
+[resource]
+script = ExtResource("1_w7hor")
+id = &"battle_hunger"
+display_name = "Battle Hunger"
+description = "For 4 s attack 35% faster and heal for 25% of attack damage."
+icon = "hunger"
+aim = "self"
+cooldown = 14.0
+cooldown_per_rank = -1.0
+mana_cost = 45.0
+damage = 0.0
+damage_per_rank = 0.0
+cast_range = 0.0
+radius = 0.0
+duration = 4.0
+value = 0.35
+value_per_rank = 0.06
+value2 = 0.25

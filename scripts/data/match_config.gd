@@ -4,6 +4,9 @@ extends Resource
 ## Edit data/match_config.tres in the Inspector.
 
 @export_group("Teams")
+## Every selectable hero, in hero-select order. Bots fill the 5 other slots from this list.
+@export var roster: Array[HeroData] = []
+## Default line-up (used when a match starts without the hero select screen).
 ## The hero you play (Team Dawn, blue).
 @export var player_hero: HeroData
 ## Your two bot teammates.

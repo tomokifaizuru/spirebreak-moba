@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="HeroData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ability_data.gd" id="1_22hl6"]
+[ext_resource type="Resource" path="res://data/abilities/calla_petal_mend.tres" id="2_4wual"]
+[ext_resource type="Resource" path="res://data/abilities/calla_bloom_ward.tres" id="3_fx2ia"]
+[ext_resource type="Resource" path="res://data/abilities/calla_lullaby.tres" id="4_de0mp"]
+[ext_resource type="Resource" path="res://data/abilities/calla_spring_chorus.tres" id="5_ckdyf"]
+[ext_resource type="Script" path="res://scripts/data/hero_data.gd" id="6_2mya0"]
+
+[resource]
+script = ExtResource("6_2mya0")
+id = &"calla"
+display_name = "Calla"
+title = "the Bloom Singer"
+role = 4
+tagline = "Bloom singer who heals, shields and slows."
+body_color = Color(0.43529412, 0.8156863, 0.54901963, 1)
+accent_color = Color(1, 0.56078434, 0.78431374, 1)
+detail_color = Color(1, 0.84705883, 0.2901961, 1)
+model_scale = 0.95
+max_hp = 640.0
+hp_per_level = 76.0
+hp_regen = 2.4
+max_mana = 480.0
+mana_per_level = 45.0
+mana_regen = 5.0
+armor = 9.0
+armor_per_level = 1.3
+move_speed = 305.0
+attack_damage_per_level = 3.4
+attack_range = 450.0
+attack_interval = 0.95
+projectile_speed = 950.0
+projectile_style = "petal"
+abilities = Array[ExtResource("1_22hl6")]([ExtResource("2_4wual"), ExtResource("3_fx2ia"), ExtResource("4_de0mp"), ExtResource("5_ckdyf")])
+skill_priority = PackedInt32Array(0, 1, 2)
+bot_retreat_hp = 0.38
+bot_aggression = 0.85
