@@ -1,8 +1,9 @@
-# Spirebreak (v0.4)
+# Spirebreak (v0.5)
 
 An original **3v3 one-lane mobile MOBA** prototype made with **Godot 4.5.1** (GL Compatibility).
-Low-poly chibi 3D, 6 heroes with roles, a **shop with combining items**, and (new in v0.4) a
-**scoreboard**, **recommended builds** with a buy popup, more **jungle camps**, a wider lane and a balance pass.
+Low-poly chibi 3D, 6 heroes with roles, a shop with combining items, a scoreboard, recommended builds and
+10 jungle camps. New in v0.5: **ramping tower shots**, **fountains that shoot divers**, **jungle gold that
+grows over time**, and attack-speed growth for Kestrel.
 Pick a hero; bots fill the other 5 slots with a random, sensible mix. Destroy the two enemy towers,
 then the **Heartspire**, to win. Matches usually last 7–12 minutes.
 
@@ -13,9 +14,53 @@ then the **Heartspire**, to win. Matches usually last 7–12 minutes.
 The game runs in landscape. On a phone, rotate it sideways. The web build is single-threaded, so it
 needs no special server headers.
 
+![Tower ramp: x2, x4, x8](preview-v0.5-tower.png)
+![Fountain defense](preview-v0.5-fountain.png)
 ![Scoreboard](preview-v0.4-scoreboard.png)
 ![Recommended item popup](preview-v0.4-recommend.png)
-![Jungle camp](preview-v0.4-jungle.png)
+
+## What's new in v0.5
+
+- **Tower damage ramp vs heroes**: each tower shot in a row at the *same* hero does double the last one
+  (1×, 2×, 4×, 8×), capped at **8×**. The streak resets when the tower switches target or the hero leaves
+  range or dies. Creeps are unaffected. Floating numbers show the streak (`-457  x4`) and get redder and
+  bigger as it climbs. Knobs: `tower_hero_ramp_factor` (2) and `tower_hero_ramp_cap` (8) in
+  `data/match_config.tres`.
+- **Fountain defense**: each fountain shoots glowing bolts at **enemy heroes** within 450 px. A bolt
+  deals 280 true damage, and the fountain fires a volley every 0.35 s, one bolt per enemy hero in range.
+  That's 800 damage per second per hero, so diving the fountain is suicide. It never hits allies, creeps
+  or monsters. Bots won't chase into the enemy fountain and walk out if they end up inside it. Knobs:
+  `fountain_attack_range`, `fountain_shot_damage`, `fountain_shot_interval`, `fountain_shot_speed`. This
+  replaces v0.4's invisible 600/s damage aura.
+- **Jungle gold scaling**: monster gold = base × (1 + floor(minutes) / 3). A Thornling (20 g base) pays
+  20 g at 0:00, 40 g at 3:00 and 80 g at 9:00. A Brambleback (55 g base) pays 220 g at 9:00. The "+Xg"
+  popup shows the scaled amount. Knob: `camp_gold_per_minute` (0.333).
+- **Kestrel attack speed growth**: +3.5% of her base attack speed per level (+38.5% at level 12), added
+  on top of item attack speed. New hero field: `attack_speed_per_level` (0 for the other heroes).
+- **Light balance**: to keep Kestrel near 50% with the new growth, her base and per-level attack damage
+  and her Piercing Bolt damage are lower. Sable's Ember Dash and Hundred Petals gain more per rank (later
+  levels only), Calla's Petal Mend heals a bit more, and Rook's base attack goes from 54 to 52. Table below.
+
+### Balance: team win rate per hero (bot-vs-bot, 96 games each)
+
+| Hero | Role | v0.4 | v0.5 |
+|---|---|---|---|
+| Morrow | Tank | 39/96 (41%) | 44/96 (46%) |
+| Rook | Fighter | 57/96 (59%) | 52/96 (54%) |
+| Sable | Assassin | 39/96 (41%) | 38/96 (40%) |
+| Lumi Vesper | Mage | 43/96 (45%) | 48/96 (50%) |
+| Kestrel | Marksman | 55/96 (57%) | 56/96 (58%) |
+| Calla | Support | 55/96 (57%) | 50/96 (52%) |
+| *Range* | | *41–59%* | *40–58%* |
+
+Every match uses all 6 heroes, so this is how often each hero's *team* won. Seeds 1–48 were each played
+normally and with sides swapped. Median match: 9.3 min (5.1–15.0), the same as v0.4. In 93 of 96 matches a
+Heartspire fell; 3 went to the 15-minute timer. Per match on average: ~58 jungle kills worth ~3,960 gold in
+total, 2.6 hero kills by towers, and 21 hero deaths. Bots almost never get shot by a fountain: 4 bolts
+across 96 games, no kills.
+Tower shots at heroes over 96 games: 4,451 at 1×, 1,041 at 2×, 486 at 4×, 212 at 8×, and 48 that would
+have been 16× or more without the cap (0.8% of shots). So the 8× cap rarely matters in bot games, but it
+stops a 5th straight shot from hitting for 2,000.
 
 ## What's new in v0.4
 
@@ -44,7 +89,7 @@ needs no special server headers.
 - **Audio defaults**: a fresh install starts with Music at 25% and SFX at 100%. Saved settings
   (`user://settings.cfg`) still win.
 
-### Balance: team win rate per hero (bot-vs-bot, 96 games each)
+### v0.4 balance: team win rate per hero (bot-vs-bot, 96 games each)
 
 Every match uses all 6 heroes, so this is how often each hero's *team* won. Seeds 1–48 were each played
 normally and with sides swapped.
@@ -186,7 +231,7 @@ Open any of these in the Inspector. The fields are commented, so hover them for 
 
 | File | What it controls |
 |---|---|
-| `data/match_config.tres` | Roster, default lineups, creep waves, gold, XP, respawn, fountain, shrine, recall, heal, tower aggro, sudden death, bot difficulty, **item catalog**, shop radius, match music path |
+| `data/match_config.tres` | Roster, default lineups, creep waves, gold, XP, respawn, fountain (heal + defense bolts), shrine, recall, heal, tower aggro + hero damage ramp, jungle respawn + gold per minute, sudden death, bot difficulty, item catalog, recommended builds, shop radius, match music path |
 | `data/items/*.tres` + `data/items/catalog.tres` | Every shop item (stats, cost, components, active) and the bot build orders per role |
 | `data/builds/*.tres` | Recommended build per hero (popup, scoreboard tab, and the first thing bots buy) |
 | `data/heroes/*.tres` | All 6 heroes: role, tagline, difficulty, HP/mana and growth, damage, attack speed and range, armor, move speed, colours, model scale, skill order, bot retreat HP and aggression |
@@ -212,12 +257,17 @@ godot --headless --path . --fixed-fps 60 -s tools/sim_match.gd -- seed=1 limit=1
 # Screenshots (needs a display, e.g. xvfb-run):
 godot --path . --resolution 1600x740 -s tools/shots.gd -- shot=shop out=/tmp/a.png
 #   shot = title | heroselect | teamfight | tower | early | victory | shop | teamicons | camdrag
-#          | scoreboard (tab=1) | recommend | jungle
-# The sim prints a "JUNGLE kills=<dawn>-<dusk> camps=10" line.
+#          | scoreboard (tab=1) | recommend | jungle | towerramp | fountain
+#   (add --fixed-fps 60 so floating numbers age in game time)
+# The sim prints "JUNGLE kills=<dawn>-<dusk> camps=10 gold=<dawn>-<dusk>" and
+# "TOWER ramp={x1.., x16+ = shots the 8x cap reduced} hero_kills=N  FOUNTAIN hits=N kills=N".
 ```
 
 ## Versions
 
+- **v0.5**: tower shots on the same hero double (8× cap) with streak numbers; fountains shoot enemy
+  heroes with visible bolts (bots avoid them); jungle gold +1/3 of base per minute; Kestrel +3.5% attack
+  speed per level; light balance.
 - **v0.4**: scoreboard (K/D/A, gold, items for all 6 heroes, plus a build tab); per-hero recommended
   builds (`.tres`) with a buy popup and a shop strip, which bots follow too; 10 jungle camps (8 small +
   2 big Brambleback) and bot jungling; lane and bridge 1.5× wider; balance pass that flattens early

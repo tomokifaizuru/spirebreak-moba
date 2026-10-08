@@ -16,5 +16,5 @@ damage_per_rank = 0.0
 cast_range = 640.0
 radius = 0.0
 duration = 0.0
-value = 130
-value_per_rank = 45
+value = 145
+value_per_rank = 48

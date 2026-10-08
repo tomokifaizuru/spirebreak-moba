@@ -80,8 +80,9 @@ func _build_how() -> void:
 	var lines := [
 		"Destroy the enemy Heartspire. Towers fall in order: Outer, Inner, then the Heartspire.",
 		"Push with your creep waves: buildings take half damage when no allied creeps are near.",
+		"Towers hit heroes harder each shot in a row (x2, x4, x8). Don't dive alone, and never the enemy fountain.",
 		"Last-hit creeps for gold, stay near kills for XP. Ultimate unlocks at level 4 (max level 12).",
-		"Jungle camps off the lane give extra gold/XP (small camps respawn in 60 s, the big Brambleback in 90 s).",
+		"Jungle camps give gold/XP that grows every minute (small camps respawn in 60 s, big Brambleback in 90 s).",
 		"",
 		"PHONE:  left thumb = joystick anywhere on the left half",
 		"ATTACK = auto-targets (hold to keep attacking)  ·  skills: tap = auto-aim, drag = aim, drag back = cancel",

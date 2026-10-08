@@ -105,6 +105,11 @@ func _draw() -> void:
 				draw_circle(trail[i] - position, 9.0 - i, Color(tc, 0.3 - i * 0.04))
 			draw_circle(Vector2.ZERO, 11.0, Color(tc, 0.5))
 			draw_circle(Vector2.ZERO, 6.0, Color.WHITE)
+		"fountain":
+			for i in trail.size():
+				draw_circle(trail[i] - position, 11.0 - i, Color(0.5, 0.95, 1.0, 0.35 - i * 0.05))
+			draw_circle(Vector2.ZERO, 13.0, Color(tc.lightened(0.5), 0.55))
+			draw_circle(Vector2.ZERO, 7.0, Color.WHITE)
 		"siege":
 			draw_circle(Vector2.ZERO, 9.0, Color(0.15, 0.15, 0.2))
 			draw_circle(Vector2.ZERO, 5.0, tc)

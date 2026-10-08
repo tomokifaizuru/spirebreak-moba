@@ -233,6 +233,10 @@ static func projectile(style: String, team: int) -> Mesh:
 				b.add(MeshKit.sphere(0.09, 6, 4), Color("d9c8ff"))
 			"tower":
 				b.octa(Vector3.ZERO, 0.11, 0.15, 0.15, tc.lightened(0.45))
+			"fountain":
+				b.add(MeshKit.sphere(0.2, 8, 6), tc.lightened(0.6))
+				b.add(MeshKit.sphere(0.12, 6, 4), Color.WHITE)
+				b.octa(Vector3.ZERO, 0.08, 0.34, 0.08, Color.WHITE)
 			_:
 				b.octa(Vector3.ZERO, 0.06, 0.08, 0.08, tc.lightened(0.4))
-		return b.commit(MeshKit.mat_glow_vc() if style in ["bolt", "wisp", "orb", "tower", "note", "petal"] else null))
+		return b.commit(MeshKit.mat_glow_vc() if style in ["bolt", "wisp", "orb", "tower", "note", "petal", "fountain"] else null))

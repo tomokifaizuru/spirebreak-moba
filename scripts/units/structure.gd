@@ -3,6 +3,7 @@ extends Unit
 ## Tower or Heartspire. Place these in scenes/maps/one_lane.tscn and pick the stats resource.
 ## Buildings must fall in order: Outer Tower -> Inner Tower -> Heartspire.
 ## Towers shoot creeps first, but lock onto an enemy hero who attacks an allied hero nearby.
+## Consecutive shots at the same hero double each time (1x, 2x, 4x, 8x cap), see MatchConfig.
 
 @export_enum("Dawn", "Dusk") var team_id := 0
 @export_enum("Outer Tower", "Inner Tower", "Heartspire") var tier := 0
@@ -41,6 +42,12 @@ func set_aggro(h: Unit, t: float) -> void:
 	if valid(h) and h.is_targetable_by(team) and position.distance_to(h.position) <= attack_range + radius + h.radius + 40.0:
 		aggro_hero = h
 		aggro_t = t
+
+
+## Damage multiplier for the n-th consecutive shot (0-based) at the same hero: 1, 2, 4, 8 (capped).
+func ramp_mult(n: int) -> float:
+	var cfg := arena.config
+	return minf(pow(cfg.tower_hero_ramp_factor, n), cfg.tower_hero_ramp_cap)
 
 
 func _in_range(u: Unit) -> bool:
@@ -85,9 +92,21 @@ func step(dt: float) -> void:
 		attack_cd = stats.attack_interval
 		var dmg := stats.damage
 		if target.kind == Kind.HERO:
-			dmg *= 1.0 + arena.config.tower_hero_ramp * ramp_stacks
-			ramp_stacks = mini(ramp_stacks + 1, arena.config.tower_hero_ramp_max_stacks)
-		arena.spawn_homing(self, target, dmg, stats.projectile_speed, "tower", Vector2(0, -radius * 0.6))
+			var mult := ramp_mult(ramp_stacks)
+			dmg *= mult
+			arena.note_tower_hit(pow(arena.config.tower_hero_ramp_factor, ramp_stacks))
+			ramp_stacks += 1
+			var tid := target.get_instance_id()
+			var hit := func(u: Unit, pr: Projectile) -> void:
+				# Only counts if the shot lands on the hero it was fired at.
+				var dealt := u.take_damage(pr.damage, self, false, false)
+				if dealt > 0.0 and u.get_instance_id() == tid:
+					arena.tower_hit_text(u, dealt, mult)
+				if not u.alive:
+					arena.tower_hero_kills += 1
+			arena.spawn_homing(self, target, dmg, stats.projectile_speed, "tower", Vector2(0, -radius * 0.6), hit)
+		else:
+			arena.spawn_homing(self, target, dmg, stats.projectile_speed, "tower", Vector2(0, -radius * 0.6))
 		arena.sfx_at("tower", position, -6.0)
 
 

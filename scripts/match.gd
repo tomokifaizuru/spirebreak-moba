@@ -57,6 +57,13 @@ var shrine_pos := Vector2.ZERO
 var camps: Array = []
 ## Neutral monsters killed by each team's heroes (stats / sims).
 var jungle_kills := [0, 0]
+## Jungle gold paid out to each team (stats / sims).
+var jungle_gold := [0, 0]
+var fountain_cd := [0.0, 0.0]
+var fountain_hits := 0
+var fountain_kills := 0
+var tower_hero_kills := 0
+var tower_ramp_hits := {}
 var gold_acc := 0.0
 var joy_vector := Vector2.ZERO
 var look_override := Vector2.INF
@@ -283,8 +290,75 @@ func _fountains(dt: float) -> void:
 		if h.position.distance_to(map.fountain_pos(h.team)) <= config.fountain_radius:
 			h.heal(h.max_hp * config.fountain_heal_pct * dt)
 			h.mana = minf(h.max_mana, h.mana + h.max_mana * config.fountain_heal_pct * dt)
-		if h.position.distance_to(map.fountain_pos(1 - h.team)) <= config.fountain_radius:
-			h.take_damage(config.fountain_damage * dt, null, true, false)
+	# Fountain defense: each fountain fires at enemy heroes in range.
+	for t in 2:
+		fountain_cd[t] -= dt
+		if fountain_cd[t] > 0.0:
+			continue
+		var fp := map.fountain_pos(t)
+		var fired := false
+		for h in heroes:
+			if h.alive and h.team != t and h.is_targetable_by(t) and in_enemy_fountain(h.team, h.position):
+				_fountain_shot(t, fp, h)
+				fired = true
+		if fired:
+			fountain_cd[t] = config.fountain_shot_interval
+			sfx_at("tower", fp, -4.0)
+
+
+## True when pos is inside the ENEMY fountain's defense range (for a hero of this team).
+func in_enemy_fountain(team: int, pos: Vector2, margin := 0.0) -> bool:
+	return pos.distance_to(map.fountain_pos(1 - team)) <= config.fountain_attack_range + margin
+
+
+func _fountain_shot(t: int, fp: Vector2, target: Hero) -> void:
+	var p := Projectile.new()
+	p.arena = self
+	p.source = null
+	p.team = t
+	p.target = target
+	p.homing = true
+	p.speed = config.fountain_shot_speed
+	p.damage = config.fountain_shot_damage
+	p.style = "fountain"
+	p.position = fp + (target.position - fp).normalized() * 40.0
+	p.on_hit = func(u: Unit, pr: Projectile) -> void:
+		var dealt := u.take_damage(pr.damage, null, true, false)
+		fountain_hits += 1
+		if not u.alive:
+			fountain_kills += 1
+		if dealt > 0.0 and not headless:
+			fx.text(u.position + Vector2(0, -u.radius - 10), "-%d" % int(dealt), Color("7fe7ff"), 20)
+	_add_fx(p, air_root)
+
+
+## Floating number for a tower shot on a hero: shows the ramp multiplier (x2, x4, x8).
+func tower_hit_text(u: Unit, dealt: float, mult: float) -> void:
+	if headless:
+		return
+	var col := Color.WHITE
+	if mult >= 8.0:
+		col = Color("ff3b3b")
+	elif mult >= 4.0:
+		col = Color("ff8a3b")
+	elif mult >= 2.0:
+		col = Color("ffd84a")
+	var txt := "-%d" % int(dealt)
+	if mult > 1.0:
+		txt += "  x%d" % int(mult)
+	var step := log(mult) / log(2.0)  # 0, 1, 2, 3: each streak step sits further right, so it reads as a ramp
+	fx.text(u.position + Vector2(-70.0 + 95.0 * step, -u.radius - 6), txt, col, int(17 + 3 * step), 3.3)
+
+
+## Sim stats for the tower ramp: hits per UNCAPPED multiplier (x16+ = shots the cap cut down).
+func note_tower_hit(raw_mult: float) -> void:
+	var k := "x%d" % int(raw_mult) if raw_mult < 16.0 else "x16+"
+	tower_ramp_hits[k] = tower_ramp_hits.get(k, 0) + 1
+
+
+## Gold for a jungle monster right now: base x (1 + floor(minutes) x camp_gold_per_minute).
+func camp_gold(base: int) -> int:
+	return int(round(base * (1.0 + floorf(time / 60.0) * config.camp_gold_per_minute)))
 
 
 func shrine_ready() -> bool:
@@ -520,10 +594,14 @@ func on_unit_died(u: Unit, killer: Unit) -> void:
 	match u.kind:
 		Unit.Kind.CREEP, Unit.Kind.NEUTRAL:
 			if kh != null:
-				kh.gold += u.bounty_gold
+				var g := u.bounty_gold
+				if u.kind == Unit.Kind.NEUTRAL:
+					g = camp_gold(u.bounty_gold)
+					jungle_gold[kh.team] += g
+				kh.gold += g
 				kh.last_hits += 1
 				if kh == player and not headless:
-					fx.text(u.position + Vector2(0, -30), "+%dg" % u.bounty_gold, Art.GOLD, 16)
+					fx.text(u.position + Vector2(0, -30), "+%dg" % g, Art.GOLD, 18 if g > u.bounty_gold else 16)
 					sfx_at("coin", u.position, -8.0)
 			if u.kind == Unit.Kind.NEUTRAL:
 				if kh != null:

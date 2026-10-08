@@ -42,6 +42,8 @@ extends Resource
 @export var monsters_per_big_camp := 1
 ## Seconds before a cleared camp comes back.
 @export var camp_respawn := 60.0
+## Camp gold grows with match time: reward = base x (1 + floor(minutes) x this). 1/3 = +33% of base per minute.
+@export var camp_gold_per_minute := 0.3333333
 ## Big camps take longer to come back.
 @export var big_camp_respawn := 90.0
 
@@ -90,8 +92,13 @@ extends Resource
 ## Fountain heals this fraction of max HP / mana per second.
 @export var fountain_heal_pct := 0.15
 @export var fountain_radius := 300.0
-## Fountain damage per second to enemy heroes inside it.
-@export var fountain_damage := 600.0
+## Fountain defense: each fountain shoots enemy heroes within this distance (never allies).
+@export var fountain_attack_range := 450.0
+## Damage per fountain shot (true damage: armor doesn't reduce it).
+@export var fountain_shot_damage := 280.0
+## Seconds between fountain volleys (one shot per enemy hero in range).
+@export var fountain_shot_interval := 0.35
+@export var fountain_shot_speed := 1200.0
 ## Healing shrine (river island): heals this fraction of max HP and mana once, then recharges.
 @export var shrine_heal_pct := 0.4
 @export var shrine_cooldown := 45.0
@@ -104,9 +111,11 @@ extends Resource
 @export var heal_spell_cooldown := 60.0
 
 @export_group("Towers and Heartspire")
-## Each shot in a row at the same hero does this much more damage (0.25 = +25%).
-@export var tower_hero_ramp := 0.25
-@export var tower_hero_ramp_max_stacks := 4
+## Each consecutive tower shot at the SAME hero does this many times the previous one
+## (2 = 1x, 2x, 4x, 8x...). The streak resets when the tower switches target or the hero leaves range / dies.
+@export var tower_hero_ramp_factor := 2.0
+## Highest multiplier the ramp can reach (8 = the 4th shot onward hits for 8x).
+@export var tower_hero_ramp_cap := 8.0
 ## Seconds a tower stays locked on a hero who attacked an allied hero under it.
 @export var tower_aggro_time := 2.5
 ## Buildings take this much LESS damage when no enemy creeps are near (stops hero-only rushes).

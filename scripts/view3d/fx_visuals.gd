@@ -31,18 +31,22 @@ class ProjVis extends Node3D:
 			start_h = 2.7 if not (src as Structure).is_heartspire() else 1.8
 		elif src is Creep:
 			start_h = 0.45
+		elif style == "fountain":
+			start_h = 1.5
 		else:
 			start_h = 0.6
 		mesh = MeshKit.inst(self, ModelLib.projectile(style, p.team))
-		if style in ["wisp", "tower", "bolt", "petal", "note", "orb"]:
+		if style in ["wisp", "tower", "bolt", "petal", "note", "orb", "fountain"]:
 			var col := Color(0.6, 0.95, 1.0, 0.5)
 			match style:
 				"tower": col = Color(Art.team_color(p.team).lightened(0.3), 0.5)
+				"fountain": col = Color(Art.team_color(p.team).lightened(0.55), 0.65)
 				"bolt": col = Color(1.0, 0.85, 0.45, 0.5)
 				"petal", "note": col = Color(1.0, 0.6, 0.85, 0.5)
 				"orb": col = Color(0.75, 0.6, 1.0, 0.5)
+			var tr_k := 2.2 if style == "fountain" else 1.0
 			for i in 4:
-				var tm := MeshKit.inst(self, MeshKit.sphere(0.07 - i * 0.012, 6, 4), Transform3D.IDENTITY, MeshKit.mat_alpha(col, true))
+				var tm := MeshKit.inst(self, MeshKit.sphere((0.07 - i * 0.012) * tr_k, 6, 4), Transform3D.IDENTITY, MeshKit.mat_alpha(col, true))
 				tm.top_level = true
 				trail.append(tm)
 		if style == "note":
@@ -83,7 +87,7 @@ class ProjVis extends Node3D:
 			var fwd := vel.normalized()
 			if absf(fwd.dot(Vector3.UP)) < 0.99:
 				mesh.basis = Basis.looking_at(-fwd, Vector3.UP)
-		if style in ["wisp", "orb", "tower"]:
+		if style in ["wisp", "orb", "tower", "fountain"]:
 			mesh.scale = Vector3.ONE * (1.0 + 0.15 * sin(t * 20.0))
 		elif style == "petal":
 			mesh.rotate_object_local(Vector3.FORWARD, delta * 14.0)

@@ -10,7 +10,7 @@ const SELECT_SCENE := "res://scenes/hero_select.tscn"
 const CONFIG_PATH := "res://data/match_config.tres"
 
 var title := "Spirebreak"
-var version := "0.4"
+var version := "0.5"
 var sfx_volume := 1.0
 ## Fresh installs start the music at 25% (slider position); a saved setting always wins.
 var music_volume := 0.25
@@ -25,7 +25,7 @@ var next_lineup := {}
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	title = str(ProjectSettings.get_setting("application/config/name", "Spirebreak"))
-	version = str(ProjectSettings.get_setting("application/config/version", "0.4"))
+	version = str(ProjectSettings.get_setting("application/config/version", "0.5"))
 	_read_debug_args()
 	_load_settings()
 	_apply_volume()

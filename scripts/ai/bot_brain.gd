@@ -87,6 +87,11 @@ func _decide() -> void:
 		_retreat(enemies)
 		return
 	pushing = _should_push(allies)
+	if a.in_enemy_fountain(h.team, h.position, 80.0):
+		state = "escape"
+		var away := (h.position - a.map.fountain_pos(1 - h.team)).normalized()
+		h.command_move(h.position + away * 400.0)
+		return
 	var tower := a.enemy_tower_threatening(h, 50.0)
 	if tower != null and not _tower_safe(tower):
 		state = "escape"
@@ -298,6 +303,8 @@ func _pick_fight_target(enemies: Array, allies: Array) -> Hero:
 	if own_tower != null:
 		mine += 1500.0
 	var ok := mine * h.data.bot_aggression >= theirs * 0.85 or t.hp < _burst(t) or t.hp_frac() < 0.22
+	if a.in_enemy_fountain(h.team, t.position, 120.0):
+		return null  # never chase into the enemy fountain
 	var tw := a.enemy_tower_covering(h.team, t.position, 40.0)
 	if tw != null and not _tower_safe(tw):
 		var dive := t.hp_frac() < 0.25 and h.hp_frac() > 0.6

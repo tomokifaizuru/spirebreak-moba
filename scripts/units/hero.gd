@@ -102,7 +102,7 @@ func _recalc_stats() -> void:
 	attack_range = data.attack_range
 	attack_interval = data.attack_interval * pow(0.98, l)
 	move_speed = data.move_speed
-	var aspd := 0.0
+	var aspd := data.attack_speed_per_level * l
 	cdr = 0.0
 	item_lifesteal = 0.0
 	for it in items:

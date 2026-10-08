@@ -4,12 +4,15 @@ extends SceneTree
 ## shot = title | heroselect (pick=<hero id>) | early (at=<seconds>) | teamfight | tower | hud | victory
 ##        | shop | teamicons (2+ heroes dead) | camdrag (real touch-drag through the HUD)
 ##        | scoreboard (tab=1 for the build tab) | recommend (popup at base) | jungle (a hero farming a camp)
+##        | towerramp (enemy tower locks onto you: x1 x2 x4 x8 numbers) | fountain (enemy fountain firing at you)
 var opts := {"shot": "title", "out": "/tmp/shot.png", "seed": "3", "tries": "5"}
 var arena: Arena
 var frames := 0
 var phase := 0
 var wait := 0
 var tries := 0
+var ramp_tower: Structure = null
+var t_mark := -1.0
 
 
 func _initialize() -> void:
@@ -162,6 +165,39 @@ func _process(_d: float) -> bool:
 						phase = 2
 						wait = 12
 						break
+		"towerramp":
+			if phase == 1 and arena.time > 50.0 and p.alive:
+				var tw: Structure = null
+				for st in arena.structures:
+					if st.team != p.team and st.tier == 0 and st.alive:
+						tw = st
+				arena.sim_substeps = 1
+				p.autopilot = false
+				p.command_stop()
+				p.max_hp = 9000.0
+				p.hp = 9000.0
+				var dirv := (p.fountain - tw.position).normalized()
+				p.position = tw.position + dirv * (tw.attack_range * 0.55)
+				tw.target = p
+				tw.ramp_stacks = 0
+				tw.attack_cd = 0.3
+				tw.set_aggro(p, 30.0)
+				arena.look_override = tw.position.lerp(p.position, 0.6) + Vector2(80, 30)
+				ramp_tower = tw
+				phase = 4
+				wait = 100000
+		"fountain":
+			if phase == 1 and arena.time > 75.0 and p.alive:
+				var efp := arena.map.fountain_pos(1 - p.team)
+				arena.sim_substeps = 1
+				p.autopilot = false
+				p.command_stop()
+				p.max_hp = 9000.0
+				p.hp = 9000.0
+				p.position = efp + (p.fountain - efp).normalized().rotated(0.9) * 380.0
+				arena.look_override = efp.lerp(p.position, 0.5) + Vector2(40, 60)
+				phase = 5
+				wait = 30
 		"teamicons":
 			if phase == 1 and arena.time > 100.0 and p.alive:
 				var dead := [0, 0]
@@ -192,6 +228,29 @@ func _process(_d: float) -> bool:
 					else:
 						print("Dusk won, retrying")
 						_start_match()
+	if phase == 5:
+		# fountain shot: wait a moment, then capture while a fountain bolt is mid-flight
+		p.command_stop()
+		wait -= 1
+		if wait <= 0:
+			for n in arena.fx_nodes:
+				if n is Projectile and (n as Projectile).style == "fountain" and is_instance_valid((n as Projectile).target) \
+						and n.position.distance_to((n as Projectile).target.position) > 150.0:
+					_capture()
+					break
+		return false
+	if phase == 4:
+		# staged shots: keep the hero parked (bots may push it) and wait
+		p.command_stop()
+		if ramp_tower != null:
+			if ramp_tower.ramp_stacks >= 4 and t_mark < 0.0:
+				t_mark = arena.time
+			if t_mark >= 0.0 and arena.time - t_mark > 0.45:
+				wait = 0
+		wait -= 1
+		if wait <= 0:
+			_capture()
+		return false
 	if phase == 2:
 		wait -= 1
 		if wait <= 0:
@@ -217,6 +276,10 @@ func _capture() -> void:
 			" primitives=", RenderingServer.viewport_get_render_info(vp_rid, RenderingServer.VIEWPORT_RENDER_INFO_TYPE_VISIBLE, RenderingServer.VIEWPORT_RENDER_INFO_PRIMITIVES_IN_FRAME),
 			" objects=", RenderingServer.viewport_get_render_info(vp_rid, RenderingServer.VIEWPORT_RENDER_INFO_TYPE_VISIBLE, RenderingServer.VIEWPORT_RENDER_INFO_OBJECTS_IN_FRAME),
 			" fps=", Engine.get_frames_per_second(), " video_mem=", RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_VIDEO_MEM_USED) / 1048576, "MB")
+	if opts.has("fxdebug") and arena != null and arena.fx != null:
+		for it in arena.fx.items:
+			if it["type"] == "text":
+				print("FX ", it["s"], " t=", it["t"], " life=", it["life"], " pos=", it["pos"])
 	var img := root.get_texture().get_image()
 	img.save_png(opts["out"])
 	print("saved ", opts["out"], " ", img.get_size(), " t=", (arena.time if arena != null else 0.0))
