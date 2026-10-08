@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="1_np3g0"]
+
+[resource]
+script = ExtResource("1_np3g0")
+id = &"iron_blade"
+display_name = "Iron Blade"
+description = "A plain, honest sword."
+icon = "blade"
+color = Color(0.7882353, 0.8235294, 0.87058824, 1)
+cost = 400
+bonus_damage = 12.0

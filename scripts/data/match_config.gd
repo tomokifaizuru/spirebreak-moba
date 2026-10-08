@@ -49,6 +49,18 @@ extends Resource
 ## Every hero on the team gets this when an enemy tower falls.
 @export var gold_tower_team := 120
 
+@export_group("Shop and items")
+## Every item + bot build orders (data/items/catalog.tres, written by tools/make_items.gd).
+@export var item_catalog: ItemCatalog
+## You can buy while within this distance of your fountain (or while dead).
+@export var shop_radius := 750.0
+@export_range(1, 6) var item_slots := 6
+
+@export_group("Audio")
+## Looping match music. If the file does not exist yet the match is simply silent (no error).
+@export_file("*.ogg", "*.mp3", "*.wav") var match_music := "res://audio/music/match-bgm-loop.ogg"
+@export_range(-30.0, 6.0) var match_music_db := -4.0
+
 @export_group("XP and levels")
 @export var max_level := 12
 ## XP needed for level 2.

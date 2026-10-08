@@ -2,6 +2,7 @@ extends Control
 ## Title screen: game name (from Project Settings), version, Play and How to Play.
 
 var how_panel: Control
+var options_panel: OptionsMenu
 var t := 0.0
 var font: Font
 var config: MatchConfig
@@ -33,11 +34,21 @@ func _ready() -> void:
 	play.add_theme_font_size_override("font_size", 38)
 	play.pressed.connect(_on_play)
 	root.add_child(play)
-	var how := MatchHud.make_button("How to Play", Color("3d4a6b"), 320.0)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	root.add_child(row)
+	var how := MatchHud.make_button("How to Play", Color("3d4a6b"), 154.0)
 	how.pressed.connect(func() -> void:
 		Sfx.play("click", -6.0)
 		how_panel.visible = true)
-	root.add_child(how)
+	how.add_theme_font_size_override("font_size", 22)
+	row.add_child(how)
+	var opt := MatchHud.make_button("Options", Color("3d4a6b"), 154.0)
+	opt.pressed.connect(func() -> void:
+		Sfx.play("click", -6.0)
+		options_panel.visible = true)
+	opt.add_theme_font_size_override("font_size", 22)
+	row.add_child(opt)
 	var ver := MatchHud.make_label("v" + Game.version + "  ·  prototype  ·  original IP", 16, Color(1, 1, 1, 0.55))
 	ver.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
 	ver.position = Vector2(18, -34)
@@ -45,6 +56,9 @@ func _ready() -> void:
 	ver.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	add_child(ver)
 	_build_how()
+	options_panel = OptionsMenu.new()
+	options_panel.visible = false
+	add_child(options_panel)
 
 
 func _build_how() -> void:
@@ -70,10 +84,13 @@ func _build_how() -> void:
 		"",
 		"PHONE:  left thumb = joystick anywhere on the left half",
 		"ATTACK = auto-targets (hold to keep attacking)  ·  skills: tap = auto-aim, drag = aim, drag back = cancel",
-		"Minimap: hold to look around  ·  RECALL = go home  ·  HEAL = instant heal (60 s)",
+		"Minimap: hold to look around  ·  drag empty screen (right side) to pan  ·  CENTER = back to hero",
+		"SHOP (at base): items combine into upgrades (parts + recipe)  ·  purple button = Blink",
+		"RECALL = go home  ·  HEAL = instant heal (60 s)  ·  top bar: grey icon = dead + respawn timer",
 		"",
 		"PC:  WASD / arrows move  ·  Space or J attack  ·  1 2 3 (or Q E F) skills  ·  R or 4 ultimate",
-		"B recall  ·  H heal  ·  Esc pause  ·  right-click to walk  ·  skills aim at the mouse",
+		"Tab shop  ·  G blink to mouse  ·  B recall  ·  H heal  ·  Esc pause  ·  right-click to walk",
+		"Right/middle-drag or screen edges pan the camera  ·  C center  ·  skills aim at the mouse",
 	]
 	for l in lines:
 		var lab := MatchHud.make_label(l, 18, Color(1, 1, 1, 0.9))

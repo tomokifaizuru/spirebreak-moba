@@ -81,18 +81,7 @@ func _build_overlay() -> void:
 	pause_box.alignment = BoxContainer.ALIGNMENT_CENTER
 	holder.add_child(pause_box)
 	pause_box.add_child(make_label("Paused", 46))
-	var vol_row := HBoxContainer.new()
-	vol_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	vol_row.add_child(make_label("SFX", 22))
-	var slider := HSlider.new()
-	slider.min_value = 0.0
-	slider.max_value = 1.0
-	slider.step = 0.05
-	slider.value = _game().sfx_volume
-	slider.custom_minimum_size = Vector2(220, 40)
-	slider.value_changed.connect(func(v: float) -> void: _game().set_sfx_volume(v))
-	vol_row.add_child(slider)
-	pause_box.add_child(vol_row)
+	pause_box.add_child(OptionsMenu.make_rows())
 	var resume := make_button("Resume", Color("2f9d5a"))
 	resume.pressed.connect(toggle_pause)
 	pause_box.add_child(resume)

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="1_e5oce"]
+
+[resource]
+script = ExtResource("1_e5oce")
+id = &"stoneskin_buckler"
+display_name = "Stoneskin Buckler"
+description = "Shrugs off creeps and towers alike."
+icon = "buckler"
+color = Color(0.6039216, 0.6392157, 0.6784314, 1)
+cost = 350
+bonus_armor = 6.0

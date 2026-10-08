@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Resource" path="res://data/items/swift_boots.tres" id="1_qfn08"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="2_ngyuw"]
+
+[resource]
+script = ExtResource("2_ngyuw")
+id = &"gale_treads"
+display_name = "Gale Treads"
+description = "Boots that ride the wind."
+icon = "treads"
+color = Color(0.49803922, 0.8784314, 0.78431374, 1)
+tier = 2
+cost = 400
+components = Array[Resource]([ExtResource("1_qfn08")])
+bonus_attack_speed = 0.12
+bonus_move_speed = 65.0

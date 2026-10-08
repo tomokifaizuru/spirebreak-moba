@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="1_yq82d"]
+
+[resource]
+script = ExtResource("1_yq82d")
+id = &"leech_fang"
+display_name = "Leech Fang"
+description = "Basic attacks heal you."
+icon = "fang"
+color = Color(0.7529412, 0.22352941, 0.16862746, 1)
+cost = 450
+lifesteal = 0.12

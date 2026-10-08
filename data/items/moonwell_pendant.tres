@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="1_mqo36"]
+
+[resource]
+script = ExtResource("1_mqo36")
+id = &"moonwell_pendant"
+display_name = "Moonwell Pendant"
+description = "More mana, refilled faster."
+icon = "pendant"
+color = Color(0.43529412, 0.65882355, 1, 1)
+cost = 350
+bonus_mana = 160.0
+bonus_mana_regen = 1.5

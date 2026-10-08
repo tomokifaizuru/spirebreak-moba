@@ -3,9 +3,14 @@ extends Control
 ## Draws the whole in-match HUD (layout follows draft-hud.png) and handles multi-touch:
 ##   left half  -> floating joystick
 ##   right side -> Attack, 3 skills, Ultimate (tap = auto-aim, drag = aim, drag back = cancel)
-##   top-left   -> minimap (hold to look around), bottom -> portrait, Recall and Heal.
+##   top-left   -> minimap (hold to look around), SHOP and CENTER (camera) buttons
+##   empty screen on the right -> drag to pan the camera (eases back to your hero after ~2 s
+##   idle or as soon as you move); top bar -> both teams' heroes (grey + timer while dead)
+##   bottom -> portrait with 6 item slots, Recall and Heal; purple button = active item (Blink).
 ## Desktop: WASD / arrows move, Space or J attack, 1-2-3 (or Q-E-F) skills, R or 4 ultimate,
-## B recall, H heal, Esc / P pause. Skills aim at the mouse when you use one. Right-click moves.
+## G blink toward the mouse, Tab shop, C center camera, B recall, H heal, Esc / P pause.
+## Skills aim at the mouse when you use one. Right-click moves; right/middle-drag or screen
+## edges pan the camera.
 
 const JOY_R := 80.0
 const SKILL_COLORS := [Color("f0a040"), Color("5b8fd6"), Color("e9b93a"), Color("e8455a")]
@@ -31,6 +36,19 @@ var mm_lane := PackedVector2Array()
 var mm_river := PackedVector2Array()
 var lay := {}
 var portrait_tex: Texture2D
+var shop: ShopPanel
+## Team bar portraits: hero -> {"tex": ViewportTexture, "gray": ImageTexture, "color": ImageTexture}
+var team_icons := {}
+var icon_frames := 0
+## Free camera: world point the camera looks at while panned (INF = follow your hero).
+var cam_pan := Vector2.INF
+var pan_idle := 0.0
+## Seconds of no panning before the camera eases back to your hero.
+const PAN_RETURN_DELAY := 2.0
+## Desktop edge-pan speed (world px / s) and edge band (screen px).
+const EDGE_PAN_SPEED := 1500.0
+const EDGE_BAND := 10.0
+var last_touch_t := -100.0
 
 
 func _ready() -> void:
@@ -60,6 +78,13 @@ func setup(a: Arena) -> void:
 		var holder := Node.new()
 		add_child(holder)
 		portrait_tex = Portraits.make(holder, a.player.data, a.player.team, 128)
+		for h in a.heroes:
+			var tex: Texture2D = portrait_tex if h == a.player else Portraits.make(holder, h.data, h.team, 96)
+			team_icons[h] = {"tex": tex}
+	shop = ShopPanel.new()
+	shop.canvas = self
+	shop.arena = a
+	add_child(shop)
 	# who is in this match
 	var mates: Array[String] = []
 	var foes: Array[String] = []
@@ -94,11 +119,143 @@ func _process(delta: float) -> void:
 		it["t"] += delta
 	feed_items = feed_items.filter(func(it: Dictionary) -> bool: return it["t"] < 6.0)
 	toast_t -= delta
+	_update_camera(delta)
+	_build_gray_icons()
+	_probe(delta)
 	queue_redraw()
+
+
+var probe_t := 0.0
+
+
+## Web test hook: with #probe in the URL, publishes HUD state to window.sbState for the
+## automated browser check (gold, items, shop open, camera offset). Off otherwise.
+func _probe(delta: float) -> void:
+	if not OS.has_feature("web") or arena == null or arena.player == null:
+		return
+	var game := get_node_or_null("/root/Game")
+	if game == null or not game.debug_args.has("probe"):
+		return
+	probe_t -= delta
+	if probe_t > 0.0:
+		return
+	probe_t = 0.25
+	var p := arena.player
+	var ids: Array = []
+	for it in p.items:
+		ids.append(String(it.id))
+	var st := {"time": arena.time, "gold": p.gold, "items": ids, "shop_open": shop.visible,
+		"at_base": Shop.can_shop_here(p), "cam_free": cam_pan != Vector2.INF,
+		"cam_offset": arena.cam_focus.distance_to(p.position), "alive": p.alive,
+		"selected": String(shop.selected.id) if shop.selected != null else ""}
+	JavaScriptBridge.eval("window.sbState=" + JSON.stringify(st) + ";", true)
+
+
+## Builds colour + greyscale copies of the team bar portraits once the viewports have rendered.
+func _build_gray_icons() -> void:
+	if team_icons.is_empty() or icon_frames < 0:
+		return
+	icon_frames += 1
+	if icon_frames < 12:
+		return
+	icon_frames = -1
+	for h in team_icons:
+		var d: Dictionary = team_icons[h]
+		var tex: Texture2D = d["tex"]
+		var img: Image = tex.get_image() if tex != null else null
+		if img == null or img.is_empty():
+			continue
+		img.convert(Image.FORMAT_RGBA8)
+		var g := img
+		for y in g.get_height():
+			for x in g.get_width():
+				var c := g.get_pixel(x, y)
+				var l := c.r * 0.3 + c.g * 0.59 + c.b * 0.11
+				var v := clampf(l * 0.95 + 0.1, 0.0, 1.0)
+				g.set_pixel(x, y, Color(v, v, v * 1.04, c.a))
+		d["gray"] = ImageTexture.create_from_image(g)
+
+
+# ---------------- camera pan ----------------
+
+func is_panning() -> bool:
+	for k in pointers:
+		var r: String = pointers[k]["role"]
+		if r == "pan" or (r == "rpan" and pointers[k].get("panning", false)):
+			return true
+	return false
+
+
+func reset_camera() -> void:
+	cam_pan = Vector2.INF
+	pan_idle = 0.0
+	if arena != null:
+		arena.look_override = Vector2.INF
+
+
+func _clamp_world(w: Vector2) -> Vector2:
+	return w.clamp(Vector2(350.0, 250.0), arena.map.map_size - Vector2(350.0, 150.0))
+
+
+## World px per screen px around the screen centre (x and y differ: the ground is tilted).
+func _pan_scale() -> Vector2:
+	if arena.view == null:
+		return Vector2.ONE
+	var c := size * 0.5
+	var w0 := _to_world(c)
+	var wx := _to_world(c + Vector2(100, 0))
+	var wy := _to_world(c + Vector2(0, 100))
+	return Vector2(maxf(w0.distance_to(wx) / 100.0, 0.5), maxf(w0.distance_to(wy) / 100.0, 0.5))
+
+
+func _pan_start(pt: Dictionary) -> void:
+	pt["focus"] = cam_pan if cam_pan != Vector2.INF else arena.cam_focus
+	pt["k"] = _pan_scale()
+
+
+func _pan_drag(pt: Dictionary, pos: Vector2) -> void:
+	var k: Vector2 = pt["k"]
+	var st: Vector2 = pt["start"]
+	cam_pan = _clamp_world((pt["focus"] as Vector2) + Vector2((st.x - pos.x) * k.x, (st.y - pos.y) * k.y))
+	arena.look_override = cam_pan
+	pan_idle = 0.0
+
+
+func _update_camera(delta: float) -> void:
+	if arena == null or arena.player == null or arena.over:
+		return
+	if get_tree().paused:
+		return
+	# desktop edge pan (mouse only, not while touching or with the shop open)
+	var vr := get_viewport_rect()
+	if now() - last_mouse_t < 8.0 and now() - last_touch_t > 3.0 and not shop.visible and pointers.is_empty() \
+			and DisplayServer.window_is_focused() and vr.has_point(mouse_pos):
+		var e := Vector2.ZERO
+		if mouse_pos.x <= EDGE_BAND:
+			e.x = -1
+		elif mouse_pos.x >= size.x - EDGE_BAND:
+			e.x = 1
+		if mouse_pos.y <= EDGE_BAND:
+			e.y = -1
+		elif mouse_pos.y >= size.y - EDGE_BAND:
+			e.y = 1
+		if e != Vector2.ZERO:
+			var base := cam_pan if cam_pan != Vector2.INF else arena.cam_focus
+			cam_pan = _clamp_world(base + e * EDGE_PAN_SPEED * delta)
+			arena.look_override = cam_pan
+			pan_idle = 0.0
+			return
+	if cam_pan == Vector2.INF or is_panning():
+		return
+	pan_idle += delta
+	var kb := Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	if pan_idle > PAN_RETURN_DELAY or arena.joy_vector.length() > 0.15 or kb.length() > 0.1:
+		reset_camera()
 
 
 func release_all() -> void:
 	pointers.clear()
+	cam_pan = Vector2.INF
 	joy_active = false
 	if arena != null:
 		arena.joy_vector = Vector2.ZERO
@@ -122,13 +279,18 @@ func _layout() -> Dictionary:
 	d["skill_r"] = [46.0, 46.0, 46.0, 52.0]
 	d["minimap"] = Rect2(m, m, 190.0, 190.0)
 	d["shop"] = Rect2(m, m + 204.0, 112.0, 50.0)
-	d["score"] = Rect2(s.x * 0.5 - 145.0, 8.0, 290.0, 60.0)
+	d["center"] = Rect2(m + 120.0, m + 204.0, 70.0, 50.0)
+	d["score"] = Rect2(s.x * 0.5 - 112.0, 8.0, 224.0, 60.0)
+	d["icon_r"] = 21.0
 	d["pause"] = Vector2(s.x - m - 26.0, m + 26.0)
 	d["gold"] = Rect2(s.x - m - 64.0 - 138.0, m + 4.0, 138.0, 44.0)
-	d["kda"] = Rect2(s.x - m - 64.0 - 138.0 - 10.0 - 138.0, m + 4.0, 138.0, 44.0)
+	d["kda"] = Rect2(s.x - m - 64.0 - 138.0, m + 54.0, 138.0, 34.0)
+	d["item"] = c + Vector2.from_angle(deg_to_rad(148)) * 150.0
+	d["item_r"] = 34.0
 	var pw := 452.0
 	var px := clampf(s.x * 0.5 - pw * 0.5, 230.0, s.x - 360.0 - pw)
 	d["portrait"] = Rect2(px, s.y - 106.0, pw, 98.0)
+	d["slots"] = Rect2(px + 102.0, s.y - 106.0 + 69.0, 6 * 34.0, 26.0)
 	d["recall"] = Rect2(px + pw - 80.0, s.y - 100.0, 72.0, 40.0)
 	d["heal"] = Rect2(px + pw - 80.0, s.y - 54.0, 72.0, 40.0)
 	d["joy_home"] = Vector2(m + 130.0, s.y - 140.0)
@@ -146,6 +308,7 @@ func _input(event: InputEvent) -> void:
 		return
 	if event is InputEventScreenTouch:
 		var st := event as InputEventScreenTouch
+		last_touch_t = now()
 		if st.pressed:
 			_press(st.index, st.position)
 		else:
@@ -162,21 +325,35 @@ func _input(event: InputEvent) -> void:
 				_press(1000, mb.position)
 			else:
 				_release(1000, mb.position)
-		elif mb.button_index == MOUSE_BUTTON_RIGHT and mb.pressed:
-			if arena.player.alive:
-				arena.player.command_move(_to_world(mb.position))
+		elif mb.button_index == MOUSE_BUTTON_RIGHT or mb.button_index == MOUSE_BUTTON_MIDDLE:
+			# right-click = move (on release, if it was not a drag); right/middle-drag = pan camera
+			var pid := 1001 if mb.button_index == MOUSE_BUTTON_RIGHT else 1002
+			if mb.pressed and not shop.visible:
+				var pt := {"role": "rpan" if pid == 1001 else "pan", "start": mb.position, "max": 0.0, "panning": pid == 1002}
+				_pan_start(pt)
+				pointers[pid] = pt
+			elif not mb.pressed and pointers.has(pid):
+				var pt2: Dictionary = pointers[pid]
+				pointers.erase(pid)
+				if pid == 1001 and not pt2.get("panning", false) and arena.player.alive:
+					reset_camera()
+					arena.player.command_move(_to_world(mb.position))
 			get_viewport().set_input_as_handled()
 	elif event is InputEventMouseMotion and event.device != InputEvent.DEVICE_ID_EMULATION:
 		mouse_pos = (event as InputEventMouseMotion).position
 		last_mouse_t = now()
-		if pointers.has(1000):
-			_drag(1000, mouse_pos)
+		for pid2 in [1000, 1001, 1002]:
+			if pointers.has(pid2):
+				_drag(pid2, mouse_pos)
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if arena == null or arena.player == null or arena.over:
 		return
 	if event.is_action_pressed("pause"):
+		if shop.visible and event is InputEventKey and (event as InputEventKey).keycode == KEY_ESCAPE:
+			shop.close()
+			return
 		hud.toggle_pause()
 		return
 	if get_tree().paused:
@@ -196,6 +373,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		p.start_recall()
 	elif event.is_action_pressed("heal"):
 		p.cast_heal()
+	elif event is InputEventKey and event.pressed and not event.echo and (event as InputEventKey).keycode == KEY_TAB:
+		toggle_shop()
+		get_viewport().set_input_as_handled()
+	elif event is InputEventKey and event.pressed and not event.echo and (event as InputEventKey).keycode == KEY_G:
+		_use_item({"point": _to_world(mouse_pos)} if now() - last_mouse_t < 4.0 else {})
+	elif event is InputEventKey and event.pressed and not event.echo and (event as InputEventKey).keycode == KEY_C:
+		reset_camera()
 	elif event.is_action_pressed("toggle_autopilot"):
 		p.autopilot = not p.autopilot
 		toast("Autopilot " + ("ON" if p.autopilot else "OFF"))
@@ -207,6 +391,25 @@ func _key_cast(slot: int) -> void:
 		aim = {"point": _to_world(mouse_pos)}
 	if not arena.player.cast(slot, aim):
 		_explain_fail(slot)
+
+
+func toggle_shop() -> void:
+	if shop.visible:
+		shop.close()
+	else:
+		release_all()
+		shop.open()
+		if not Shop.can_shop_here(arena.player):
+			toast("Return to base to buy", 1.6)
+
+
+func _use_item(aim: Dictionary) -> void:
+	var p := arena.player
+	var it := p.active_item()
+	if it == null:
+		toast("Buy a Blink Charm in the shop to use this", 1.4)
+	elif not p.use_item(aim) and p.alive and p.item_cd > 0.0:
+		toast("%s ready in %ds" % [it.display_name, ceili(p.item_cd)], 1.0)
 
 
 func _explain_fail(slot: int) -> void:
@@ -231,6 +434,10 @@ func _press(id: int, pos: Vector2) -> void:
 	lay = _layout()
 	var p := arena.player
 	var role := ""
+	if shop.visible:
+		shop.press(pos)
+		get_viewport().set_input_as_handled()
+		return
 	if pos.distance_to(lay["pause"]) <= 34.0:
 		hud.toggle_pause()
 		get_viewport().set_input_as_handled()
@@ -241,6 +448,8 @@ func _press(id: int, pos: Vector2) -> void:
 			break
 	if role == "" and pos.distance_to(lay["atk"]) <= lay["atk_r"] + 12.0:
 		role = "attack"
+	if role == "" and p.active_item() != null and pos.distance_to(lay["item"]) <= lay["item_r"] + 8.0:
+		role = "item"
 	if role == "":
 		if (lay["recall"] as Rect2).grow(6).has_point(pos):
 			p.start_recall()
@@ -251,12 +460,17 @@ func _press(id: int, pos: Vector2) -> void:
 				toast("Heal ready in %ds" % ceili(p.heal_cd), 1.0)
 			get_viewport().set_input_as_handled()
 			return
-		if (lay["shop"] as Rect2).has_point(pos):
-			toast("The shop is coming in a later update. Your gold is saved for it!", 2.5)
+		if (lay["shop"] as Rect2).grow(4).has_point(pos) or (lay["slots"] as Rect2).grow(4).has_point(pos):
+			toggle_shop()
+			get_viewport().set_input_as_handled()
+			return
+		if (lay["center"] as Rect2).grow(4).has_point(pos):
+			reset_camera()
 			get_viewport().set_input_as_handled()
 			return
 		if (lay["minimap"] as Rect2).has_point(pos):
 			role = "minimap"
+			cam_pan = Vector2.INF
 			_minimap_look(pos)
 	if role == "" and pos.x < size.x * 0.46 and not (lay["portrait"] as Rect2).has_point(pos) and not joy_active:
 		role = "joy"
@@ -267,9 +481,13 @@ func _press(id: int, pos: Vector2) -> void:
 		_world_click(pos)
 		get_viewport().set_input_as_handled()
 		return
+	if role == "" and not _on_hud_panel(pos):
+		role = "pan"  # empty screen on the right: drag the camera around
 	if role == "":
 		return
 	pointers[id] = {"role": role, "start": pos, "max": 0.0}
+	if role == "pan":
+		_pan_start(pointers[id])
 	if role == "attack":
 		p.attack_held = true
 		p.press_attack()
@@ -296,8 +514,22 @@ func _drag(id: int, pos: Vector2) -> void:
 			arena.player.aim_preview = {"slot": slot, "dir": v2.normalized(), "mag": clampf((v2.length() - 26.0) / 130.0, 0.12, 1.0)}
 		elif pt["max"] > 40.0:
 			arena.player.aim_preview = {"slot": slot, "dir": Vector2.ZERO, "cancel": true}
+	elif role == "item":
+		var v3: Vector2 = pos - lay["item"]
+		pt["max"] = maxf(pt["max"], v3.length())
+		if v3.length() > 24.0:
+			arena.player.aim_preview = {"slot": 4, "dir": v3.normalized(), "mag": clampf((v3.length() - 24.0) / 120.0, 0.25, 1.0)}
+		elif pt["max"] > 40.0:
+			arena.player.aim_preview = {"slot": 4, "dir": Vector2.ZERO, "cancel": true}
 	elif role == "minimap":
 		_minimap_look(pos)
+	elif role == "pan":
+		_pan_drag(pt, pos)
+	elif role == "rpan":
+		if pos.distance_to(pt["start"]) > 12.0:
+			pt["panning"] = true
+		if pt["panning"]:
+			_pan_drag(pt, pos)
 	get_viewport().set_input_as_handled()
 
 
@@ -327,9 +559,33 @@ func _release(id: int, pos: Vector2) -> void:
 			ok = p.cast(slot)
 		if not ok:
 			_explain_fail(slot)
+	elif role == "item":
+		p.aim_preview = {}
+		var vi: Vector2 = pos - lay["item"]
+		if vi.length() > 24.0:
+			_use_item({"dir": vi.normalized(), "mag": clampf((vi.length() - 24.0) / 120.0, 0.25, 1.0)})
+		elif pt["max"] > 40.0:
+			toast("Cancelled", 0.6)
+		else:
+			_use_item({})
 	elif role == "minimap":
 		arena.look_override = Vector2.INF
+	elif role == "pan":
+		pan_idle = 0.0
 	get_viewport().set_input_as_handled()
+
+
+## True over HUD panels that should not start a camera drag.
+func _on_hud_panel(pos: Vector2) -> bool:
+	if (lay["portrait"] as Rect2).grow(6).has_point(pos) or (lay["score"] as Rect2).grow(6).has_point(pos):
+		return true
+	if (lay["gold"] as Rect2).grow(6).has_point(pos) or (lay["kda"] as Rect2).grow(6).has_point(pos):
+		return true
+	# the hero icon strip next to the score
+	var sr: Rect2 = lay["score"]
+	if pos.y < sr.end.y + 30.0 and pos.x > sr.position.x - 170.0 and pos.x < sr.end.x + 170.0:
+		return true
+	return false
 
 
 func _world_click(pos: Vector2) -> void:
@@ -345,6 +601,7 @@ func _world_click(pos: Vector2) -> void:
 			if d < bd:
 				bd = d
 				best = u
+	reset_camera()
 	if best != null:
 		p.command_attack(best)
 	else:
@@ -383,12 +640,17 @@ func _draw() -> void:
 	var p := arena.player
 	_draw_minimap(lay["minimap"])
 	_draw_shop(lay["shop"])
+	_draw_center_button(lay["center"])
 	_draw_score(lay["score"])
+	_draw_team_icons(lay["score"])
 	_draw_top_right()
 	_draw_feed()
 	_draw_portrait(lay["portrait"])
 	_draw_joystick()
 	_draw_buttons()
+	_draw_item_button()
+	if cam_pan != Vector2.INF and not shop.visible:
+		_text(Vector2(size.x * 0.5, size.y - 124.0), "Free camera · tap CENTER or move to return", 14, Color(1, 1, 1, 0.75), 1, 4)
 	if toast_t > 0.0 and toast_text != "":
 		var a := clampf(toast_t * 2.0, 0.0, 1.0)
 		var w := font.get_string_size(toast_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x + 40.0
@@ -455,11 +717,96 @@ func _draw_minimap(r: Rect2) -> void:
 
 
 func _draw_shop(r: Rect2) -> void:
+	var p := arena.player
+	var at_base := Shop.can_shop_here(p)
+	var nx := p.brain.next_item() if p.brain != null else null
+	var ready := at_base and nx != null and p.gold >= Shop.price_for(p, nx)
 	var sb := sb_panel.duplicate() as StyleBoxFlat
-	sb.bg_color = Color(0.55, 0.42, 0.12, 0.7)
+	sb.bg_color = Color(0.62, 0.46, 0.12, 0.85) if at_base else Color(0.45, 0.35, 0.12, 0.7)
+	if ready:
+		sb.border_color = Color(1, 0.85, 0.4, 0.55 + 0.35 * sin(now() * 5.0))
+		sb.set_border_width_all(3)
 	draw_style_box(sb, r)
-	_text(Vector2(r.position.x + r.size.x * 0.5, r.position.y + 22.0), "SHOP", 18, Color(1, 1, 1, 0.75), 1, 3)
-	_text(Vector2(r.position.x + r.size.x * 0.5, r.position.y + 42.0), "soon", 13, Color(1, 0.9, 0.6, 0.8), 1)
+	Art.draw_icon(self, "coin", r.position + Vector2(20.0, 25.0), 10.0)
+	_text(Vector2(r.position.x + 66.0, r.position.y + 23.0), "SHOP", 18, Color.WHITE, 1, 3)
+	_text(Vector2(r.position.x + 66.0, r.position.y + 42.0), "buy now" if at_base else "at base", 12,
+			Color("b8ffb0") if at_base else Color(1, 0.9, 0.6, 0.8), 1)
+
+
+func _draw_center_button(r: Rect2) -> void:
+	var free := cam_pan != Vector2.INF
+	var sb := sb_panel.duplicate() as StyleBoxFlat
+	sb.bg_color = Color(0.2, 0.45, 0.8, 0.85) if free else Color(0.07, 0.08, 0.12, 0.7)
+	draw_style_box(sb, r)
+	var c := r.position + Vector2(r.size.x * 0.5, 20.0)
+	draw_arc(c, 9.0, 0, TAU, 20, Color.WHITE, 2.0, true)
+	draw_circle(c, 3.0, Color.WHITE)
+	for d in [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]:
+		draw_line(c + d * 11.0, c + d * 15.0, Color.WHITE, 2.0)
+	_text(Vector2(c.x, r.position.y + 44.0), "CENTER", 11, Color(1, 1, 1, 0.9 if free else 0.6), 1)
+
+
+## Both teams' heroes beside the score: Dawn on the left, Dusk on the right. Dead heroes turn
+## grey with their respawn countdown.
+func _draw_team_icons(sr: Rect2) -> void:
+	var rr: float = lay["icon_r"]
+	for t in [0, 1]:
+		var list: Array = []
+		for h in arena.heroes:
+			if h.team == t:
+				list.append(h)
+		for i in list.size():
+			var h: Hero = list[i]
+			var x := sr.position.x - 8.0 - rr - i * (rr * 2.0 + 7.0) if t == 0 else sr.end.x + 8.0 + rr + i * (rr * 2.0 + 7.0)
+			var c := Vector2(x, sr.position.y + 28.0)
+			var col := Art.team_color(t)
+			draw_circle(c, rr + 2.0, Color(0.04, 0.05, 0.08, 0.92))
+			draw_circle(c, rr, Color(h.data.body_color.darkened(0.3), 0.9) if h.alive else Color(0.3, 0.3, 0.33))
+			var d: Dictionary = team_icons.get(h, {})
+			var tex: Texture2D = null
+			if h.alive:
+				tex = d.get("tex", null)
+			else:
+				tex = d.get("gray", null)
+			if tex != null:
+				draw_texture_rect(tex, Rect2(c - Vector2(rr, rr + 2.0), Vector2(rr, rr) * 2.0), false, Color(1, 1, 1))
+			elif not h.alive:
+				draw_circle(c, rr, Color(0.35, 0.35, 0.38))
+			draw_arc(c, rr + 1.0, 0, TAU, 32, (Art.PLAYER if h == arena.player else col) if h.alive else Color(0.45, 0.45, 0.5), 3.0 if h == arena.player else 2.0, true)
+			# level badge
+			var lc := c + Vector2(rr * 0.72, rr * 0.72)
+			draw_circle(lc, 8.0, Color(0.05, 0.06, 0.09))
+			_text(lc + Vector2(0, 4), str(h.level), 10, Color.WHITE if h.alive else Color(0.7, 0.7, 0.7), 1)
+			if not h.alive:
+				draw_circle(c, rr, Color(0, 0, 0, 0.22))
+				_text(c + Vector2(0, 7), str(ceili(h.respawn_t)), 19, Color.WHITE, 1, 5)
+			elif h.hp_frac() < 0.999:
+				var bw := rr * 1.6
+				var br := Rect2(c + Vector2(-bw * 0.5, rr + 4.0), Vector2(bw, 4.0))
+				draw_rect(br, Color(0, 0, 0, 0.6))
+				draw_rect(Rect2(br.position, Vector2(bw * h.hp_frac(), 4.0)), Color("4cd06a") if t == arena.player.team else Color("ff5a5a"))
+
+
+func _draw_item_button() -> void:
+	var p := arena.player
+	var it := p.active_item()
+	if it == null:
+		return
+	var c: Vector2 = lay["item"]
+	var r: float = lay["item_r"]
+	var ready := p.alive and p.item_cd <= 0.0
+	draw_circle(c + Vector2(0, 3), r + 3.0, Color(0, 0, 0, 0.3))
+	draw_circle(c, r, Color("7d4fd6") if ready else Color("4a3a70"))
+	draw_circle(c, r * 0.82, Color("9a6cf0") if ready else Color("54447a"))
+	draw_arc(c, r, 0, TAU, 40, Color(1, 1, 1, 0.9 if ready else 0.45), 3.0, true)
+	ItemIcons.draw(self, it.icon, c + Vector2(0, -3), r * 0.55, Color(1, 1, 1), 1.0 if ready else 0.6)
+	_text(c + Vector2(0, r + 14.0), "BLINK", 12, Color.WHITE, 1, 3)
+	if p.item_cd > 0.0:
+		var frac := clampf(p.item_cd / maxf(it.active_cooldown, 0.01), 0.0, 1.0)
+		draw_colored_polygon(Art.pie_pts(c, r, -PI / 2.0, -PI / 2.0 + TAU * frac), Color(0, 0, 0, 0.5))
+		_text(c + Vector2(0, 8), str(ceili(p.item_cd)), 22, Color.WHITE, 1, 4)
+	if p.aim_preview.get("slot", -1) == 4:
+		draw_arc(c, r + 5.0, 0, TAU, 40, Color(1, 1, 1, 0.9), 3.0, true)
 
 
 func _draw_score(r: Rect2) -> void:
@@ -556,11 +903,19 @@ func _draw_portrait(r: Rect2) -> void:
 	var xr := Rect2(x0, r.position.y + 63.0, bw, 3.0)
 	draw_rect(xr, Color(0.15, 0.17, 0.2))
 	draw_rect(Rect2(xr.position, Vector2(bw * (1.0 if p.level >= arena.config.max_level else p.xp / p.xp_needed()), 3.0)), Color("c9a0ff"))
-	for i in 6:
-		var ir := Rect2(x0 + i * 31.0, r.position.y + 70.0, 26.0, 22.0)
-		draw_rect(ir, Color(1, 1, 1, 0.06))
-		draw_rect(ir, Color(1, 1, 1, 0.12), false, 1.0)
-		_text(ir.get_center() + Vector2(0, 5), "+", 14, Color(1, 1, 1, 0.25), 1)
+	var slots: Rect2 = lay["slots"]
+	for i in arena.config.item_slots:
+		var ir := Rect2(slots.position.x + i * 34.0, slots.position.y, 30.0, 26.0)
+		draw_rect(ir, Color(1, 1, 1, 0.07))
+		draw_rect(ir, Color(1, 1, 1, 0.16), false, 1.0)
+		if i < p.items.size():
+			var it: ItemData = p.items[i]
+			draw_rect(ir.grow(-1), Color(it.color.darkened(0.72), 0.95))
+			ItemIcons.draw(self, it.icon, ir.get_center(), 11.0, it.color)
+			if it.active != "none" and p.item_cd > 0.0:
+				draw_rect(Rect2(ir.position, Vector2(ir.size.x, ir.size.y * clampf(p.item_cd / it.active_cooldown, 0.0, 1.0))), Color(0, 0, 0, 0.55))
+		else:
+			_text(ir.get_center() + Vector2(0, 5), "+", 14, Color(1, 1, 1, 0.25), 1)
 	_small_button(lay["recall"], "recall", "RECALL", p.recall_t > 0.0, 0.0)
 	_small_button(lay["heal"], "heal", "HEAL", false, maxf(p.heal_cd, 0.0) / arena.config.heal_spell_cooldown)
 	if not p.alive:

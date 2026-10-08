@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=4 format=3]
+
+[ext_resource type="Resource" path="res://data/items/leech_fang.tres" id="1_56ib4"]
+[ext_resource type="Resource" path="res://data/items/iron_blade.tres" id="2_gbi2h"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_1x3xs"]
+
+[resource]
+script = ExtResource("3_1x3xs")
+id = &"bloodfang_cleaver"
+display_name = "Bloodfang Cleaver"
+description = "Damage plus strong lifesteal."
+icon = "cleaver"
+color = Color(0.90588236, 0.29803923, 0.23529412, 1)
+tier = 2
+cost = 400
+components = Array[Resource]([ExtResource("1_56ib4"), ExtResource("2_gbi2h")])
+bonus_damage = 24.0
+lifesteal = 0.2

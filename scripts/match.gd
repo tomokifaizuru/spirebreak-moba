@@ -104,6 +104,10 @@ func _ready() -> void:
 			sim_substeps = maxi(1, int(game.debug_args["speed"]))
 	if hud != null and hud.has_method("setup") and not headless:
 		hud.setup(self)
+	if not headless:
+		var sfx := get_node_or_null("/root/Sfx")
+		if sfx != null:
+			sfx.play_music(config.match_music, config.match_music_db)
 
 
 func _build_lane() -> void:
@@ -590,6 +594,30 @@ var cast_counts := {}
 func on_cast(h: Hero, ab: AbilityData) -> void:
 	cast_counts[ab.id] = cast_counts.get(ab.id, 0) + 1
 	sfx_at("cast", h.position, -6.0)
+
+
+## Every purchase (printed by tools/sim_match.gd): item id -> count.
+var buy_counts := {}
+## Emitted after any hero buys/combines an item (the HUD refreshes slots / toasts).
+signal item_bought(h: Hero, it: ItemData)
+
+
+func on_item_bought(h: Hero, it: ItemData, _price: int) -> void:
+	buy_counts[it.id] = buy_counts.get(it.id, 0) + 1
+	if h == player:
+		play_sfx("coin", -2.0)
+	item_bought.emit(h, it)
+
+
+func on_blink(h: Hero, from: Vector2, to: Vector2) -> void:
+	cast_counts[&"blink"] = cast_counts.get(&"blink", 0) + 1
+	sfx_at("cast", to, -4.0)
+	if view != null:
+		var col := Color(0.75, 0.55, 1.0)
+		fx_ring(from, 10.0, 90.0, col, 0.35, 5.0)
+		fx_ring(to, 90.0, 10.0, col, 0.3, 5.0)
+		view.burst(Vector3(from.x * MeshKit.S, 0.4, from.y * MeshKit.S), col, 16, 0.35)
+		view.burst(Vector3(to.x * MeshKit.S, 0.4, to.y * MeshKit.S), col, 16, 0.35)
 
 
 # ---------------- spawning helpers ----------------

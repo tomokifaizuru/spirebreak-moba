@@ -22,6 +22,8 @@ var pushing := false
 var react := 0.25
 ## Chance to use a skill when it would make sense.
 var skill_chance := 0.8
+## Match time of the last "go home to shop" recall.
+var last_shop_trip := -999.0
 
 
 func _init(h: Hero) -> void:
@@ -59,6 +61,7 @@ func _decide() -> void:
 		if a.enemies_in_radius(h.team, h.position, 650.0, false).is_empty():
 			return
 		h.cancel_recall()
+	try_shop()
 	if hpf < 0.3 and h.heal_cd <= 0.0 and not enemies.is_empty():
 		h.cast_heal()
 		hpf = h.hp_frac()
@@ -92,8 +95,14 @@ func _decide() -> void:
 	var t := _pick_fight_target(enemies, allies)
 	if t != null:
 		state = "fight"
+		_try_blink_engage(t)
 		_use_skills(t)
 		h.command_attack(t)
+		return
+	if enemies.is_empty() and _want_shop_trip(hpf):
+		last_shop_trip = a.time
+		state = "shop"
+		h.start_recall()
 		return
 	if pushing:
 		var s2 := a.attackable_structure_near(h, h.attack_range + 900.0)
@@ -114,6 +123,85 @@ func _decide() -> void:
 		return
 	state = "lane"
 	h.command_move(_lane_spot())
+
+
+# ---------------- items ----------------
+
+## True if `it` (or an upgrade built from it) is already in the inventory.
+func _has_or_built(it: ItemData) -> bool:
+	for x in hero.items:
+		if _contains(x, it):
+			return true
+	return false
+
+
+func _contains(root: ItemData, it: ItemData) -> bool:
+	if root.id == it.id:
+		return true
+	for c in root.components:
+		if c != null and _contains(c as ItemData, it):
+			return true
+	return false
+
+
+## Next item in this hero's role build order (null = build finished / inventory full).
+func next_item() -> ItemData:
+	var cat: ItemCatalog = hero.arena.config.item_catalog
+	if cat == null:
+		return null
+	for it in cat.build_for(hero.data.role):
+		if it == null or _has_or_built(it):
+			continue
+		if Shop.block_reason(hero, it, false) == "Inventory full":
+			continue
+		return it
+	return null
+
+
+## Buys as much of the build as the hero can afford (only works at base / while dead).
+func try_shop() -> void:
+	var h := hero
+	if not Shop.can_shop_here(h):
+		return
+	for i in 4:
+		var it := next_item()
+		if it == null or not Shop.buy(h, it):
+			return
+
+
+## Go home to spend a big pile of gold (only when the lane is quiet).
+func _want_shop_trip(hpf: float) -> bool:
+	var h := hero
+	var a := _arena()
+	if a.time - last_shop_trip < 50.0 or h.position.distance_to(h.fountain) < 1800.0:
+		return false
+	var it := next_item()
+	if it == null:
+		return false
+	var price := Shop.price_for(h, it)
+	if price < 600 or h.gold < price:
+		return false
+	return hpf < 0.85 or h.gold >= price + 500
+
+
+## Melee divers blink onto a fight target that is just out of reach.
+func _try_blink_engage(t: Hero) -> void:
+	var h := hero
+	if not h.can_use_item() or randf() > skill_chance:
+		return
+	var it := h.active_item()
+	var role := h.data.role
+	if role != 0 and role != 3 and role != 5:
+		return
+	var d := h.position.distance_to(t.position)
+	if d < h.attack_range + 220.0 or d > it.active_range + h.attack_range:
+		return
+	if h.hp_frac() < 0.5 or (role != 0 and t.hp_frac() > 0.7):
+		return
+	var dest := t.position - (t.position - h.position).normalized() * maxf(h.attack_range * 0.6, 40.0)
+	if _arena().enemy_tower_covering(h.team, dest, 60.0) != null:
+		return
+	h.use_item({"point": dest})
 
 
 func _power(list: Array) -> float:
@@ -363,6 +451,8 @@ func _retreat(enemies: Array) -> void:
 			elif id == &"smoke_veil" or id == &"barkskin":
 				if h.cast(slot):
 					break
+	if closest != null and cd < 420.0 and h.hp_frac() < 0.4 and h.can_use_item():
+		h.use_item({"dir": home_dir if cd > 250.0 else ((h.position - closest.position).normalized() + home_dir).normalized()})
 	var danger := not a.enemies_in_radius(h.team, h.position, 700.0, false).is_empty() \
 			or a.enemy_tower_threatening(h, 150.0) != null
 	if not danger and h.position.distance_to(h.fountain) > 1600.0:

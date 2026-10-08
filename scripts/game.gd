@@ -10,8 +10,9 @@ const SELECT_SCENE := "res://scenes/hero_select.tscn"
 const CONFIG_PATH := "res://data/match_config.tres"
 
 var title := "Spirebreak"
-var version := "0.2"
+var version := "0.3"
 var sfx_volume := 0.8
+var music_volume := 0.7
 ## Debug flags from the command line (-- autopilot speed=4) or the web URL (#autopilot&speed=4).
 var debug_args := {}
 ## The hero picked on the hero select screen (null until you pick one).
@@ -23,7 +24,7 @@ var next_lineup := {}
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	title = str(ProjectSettings.get_setting("application/config/name", "Spirebreak"))
-	version = str(ProjectSettings.get_setting("application/config/version", "0.2"))
+	version = str(ProjectSettings.get_setting("application/config/version", "0.3"))
 	_read_debug_args()
 	_load_settings()
 	_apply_volume()
@@ -45,11 +46,13 @@ func _load_settings() -> void:
 	var cfg := ConfigFile.new()
 	if cfg.load(SETTINGS_PATH) == OK:
 		sfx_volume = float(cfg.get_value("audio", "sfx", sfx_volume))
+		music_volume = float(cfg.get_value("audio", "music", music_volume))
 
 
 func _save_settings() -> void:
 	var cfg := ConfigFile.new()
 	cfg.set_value("audio", "sfx", sfx_volume)
+	cfg.set_value("audio", "music", music_volume)
 	cfg.save(SETTINGS_PATH)
 
 
@@ -59,21 +62,42 @@ func set_sfx_volume(v: float) -> void:
 	_save_settings()
 
 
+func set_music_volume(v: float) -> void:
+	music_volume = clampf(v, 0.0, 1.0)
+	_apply_volume()
+	_save_settings()
+
+
 func _apply_volume() -> void:
-	var bus := AudioServer.get_bus_index("SFX")
-	if bus >= 0:
-		AudioServer.set_bus_volume_db(bus, linear_to_db(maxf(sfx_volume, 0.0001)))
-		AudioServer.set_bus_mute(bus, sfx_volume <= 0.001)
+	for pair in [["SFX", sfx_volume], ["Music", music_volume]]:
+		var bus := AudioServer.get_bus_index(pair[0])
+		if bus < 0:
+			# the bus layout is missing (e.g. edited away): create the bus so volume still works
+			AudioServer.add_bus()
+			bus = AudioServer.bus_count - 1
+			AudioServer.set_bus_name(bus, pair[0])
+			AudioServer.set_bus_send(bus, &"Master")
+		var v: float = pair[1]
+		AudioServer.set_bus_volume_db(bus, linear_to_db(maxf(v, 0.0001)))
+		AudioServer.set_bus_mute(bus, v <= 0.001)
 
 
 func goto_title() -> void:
 	get_tree().paused = false
+	_stop_music()
 	get_tree().call_deferred("change_scene_to_file", TITLE_SCENE)
 
 
 func goto_hero_select() -> void:
 	get_tree().paused = false
+	_stop_music()
 	get_tree().call_deferred("change_scene_to_file", SELECT_SCENE)
+
+
+func _stop_music() -> void:
+	var sfx := get_node_or_null("/root/Sfx")
+	if sfx != null:
+		sfx.stop_music()
 
 
 func roster() -> Array:

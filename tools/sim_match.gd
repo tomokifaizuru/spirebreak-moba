@@ -1,6 +1,7 @@
 extends SceneTree
 ## Headless match test: every hero (yours too) is a bot. Prints progress and a summary.
 ##   godot --headless --path . -s tools/sim_match.gd -- seed=3 limit=1000 substeps=4 [hero=rook]
+## Extra: items=0 (no shop: bots never buy), swap=1 (swap the two teams' sides).
 ## Each seed picks a random hero for you (or `hero=<id>`) and random bot teams (same builder as the game).
 var arena: Arena
 var frames := 0
@@ -35,6 +36,11 @@ func _physics_process(_d: float) -> bool:
 			if str(h.id) == opts["hero"]:
 				pick = h
 		arena.lineup = Lineup.build(pick, cfg.roster, rng)
+		if opts.get("swap", "0") == "1":
+			arena.lineup = {"dawn": arena.lineup["dusk"], "dusk": arena.lineup["dawn"]}
+		if opts.get("items", "1") == "0":
+			arena.config = cfg.duplicate()
+			arena.config.item_catalog = null
 		var names := []
 		for t in ["dawn", "dusk"]:
 			var l := []
@@ -79,6 +85,7 @@ func _physics_process(_d: float) -> bool:
 	if arena.over or t > float(opts["limit"]):
 		var wall := (Time.get_ticks_msec() - wall_start) / 1000.0
 		print("CASTS ", arena.cast_counts)
+		print("BUYS ", arena.buy_counts)
 		print("RESULT seed=%s winner=%s reason=\"%s\" time=%.0fs (%d:%02d) kills=%d-%d buildings_destroyed=%d-%d waves=%d max_creeps=%d old_creep_samples=%d stuck=%s wall=%.1fs" % [
 			opts["seed"], ("DAWN" if arena.winner == 0 else ("DUSK" if arena.winner == 1 else "NONE")), arena.end_reason, t, int(t) / 60, int(t) % 60,
 			arena.kills[0], arena.kills[1], arena.destroyed[0], arena.destroyed[1], arena.wave_count, max_creeps, old_creeps, str(stuck), wall])
@@ -93,6 +100,10 @@ func _physics_process(_d: float) -> bool:
 			print(o)
 		for h in arena.heroes:
 			print("  %s %-12s L%2d K/D/A %d/%d/%d LH %d gold %d moved %d" % ["DAWN" if h.team == 0 else "DUSK", h.display_name, h.level, h.kills, h.deaths, h.assists, h.last_hits, h.gold, int(h.distance_moved)])
+			var names_i: Array = []
+			for it in h.items:
+				names_i.append(String(it.id))
+			print("       items: ", ", ".join(names_i))
 		quit()
 	return false
 

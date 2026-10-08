@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="1_hvivv"]
+
+[resource]
+script = ExtResource("1_hvivv")
+id = &"swift_boots"
+display_name = "Swift Boots"
+description = "Light boots for getting around the lane."
+icon = "boots"
+color = Color(0.8509804, 0.627451, 0.4, 1)
+bonus_move_speed = 35.0

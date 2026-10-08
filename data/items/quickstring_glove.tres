@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="1_msjvc"]
+
+[resource]
+script = ExtResource("1_msjvc")
+id = &"quickstring_glove"
+display_name = "Quickstring Glove"
+description = "Swing and shoot faster."
+icon = "glove"
+color = Color(0.9490196, 0.7882353, 0.29803923, 1)
+cost = 400
+bonus_attack_speed = 0.18

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="1_dci1s"]
+
+[resource]
+script = ExtResource("1_dci1s")
+id = &"blink_charm"
+display_name = "Blink Charm"
+description = "Active: teleport a short distance in the aimed direction."
+icon = "blink"
+color = Color(0.7019608, 0.53333336, 1, 1)
+cost = 500
+active = "blink"

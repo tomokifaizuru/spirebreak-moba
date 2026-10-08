@@ -3,3 +3,11 @@
 # Build artifacts
 *.zip
 *.tmp
+
+# DJ source / scratch for match music (the shipped loop is match-bgm-loop.ogg)
+audio/music/*.wav
+audio/music/*.mp4
+audio/music/*.mp3
+audio/music/*.flac
+audio/music/*.f32
+audio/music/_render*

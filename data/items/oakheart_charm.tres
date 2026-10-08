@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="1_civev"]
+
+[resource]
+script = ExtResource("1_civev")
+id = &"oakheart_charm"
+display_name = "Oakheart Charm"
+description = "A carved heart of living oak."
+icon = "heart"
+color = Color(0.8784314, 0.3529412, 0.3529412, 1)
+cost = 400
+bonus_hp = 200.0
+bonus_hp_regen = 1.5

@@ -336,6 +336,28 @@ func unit_died(u: Unit) -> void:
 
 # ---------------- aim preview ----------------
 
+## Blink aim: range ring + destination ring.
+func _update_item_aim(p: Hero) -> void:
+	var it := p.active_item()
+	var d: Vector2 = p.aim_preview.get("dir", Vector2.ZERO)
+	var mag: float = p.aim_preview.get("mag", 1.0)
+	var cancel: bool = p.aim_preview.get("cancel", false)
+	var origin := MeshKit.v3(p.position, 0.07)
+	var rr := it.active_range * MeshKit.S
+	aim_range.visible = true
+	aim_range.position = origin
+	aim_range.scale = Vector3(rr, 1, rr)
+	FxVisuals.decal_ring_width(aim_range, rr, 0.05)
+	var r2 := (p.radius + 20.0) * MeshKit.S
+	aim_shape.visible = d != Vector2.ZERO
+	aim_shape.rotation = Vector3.ZERO
+	MeshKit.decal_set(aim_shape, "color", Color(1, 0.3, 0.3, 0.8) if cancel else Color(0.8, 0.6, 1.0, 0.9))
+	MeshKit.decal_set(aim_shape, "mode", 0)
+	aim_shape.position = MeshKit.v3(p.position + d * it.active_range * clampf(mag, 0.25, 1.0), 0.08)
+	aim_shape.scale = Vector3(r2, 1, r2)
+	FxVisuals.decal_ring_width(aim_shape, r2, 0.08)
+
+
 func _update_aim() -> void:
 	var p := arena.player
 	if p == null or p.aim_preview.is_empty() or not p.alive:
@@ -343,6 +365,9 @@ func _update_aim() -> void:
 		aim_shape.visible = false
 		return
 	var slot: int = p.aim_preview.get("slot", -1)
+	if slot == 4 and p.active_item() != null:
+		_update_item_aim(p)
+		return
 	if slot < 0 or slot >= p.data.abilities.size():
 		aim_range.visible = false
 		aim_shape.visible = false

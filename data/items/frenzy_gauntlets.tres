@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Resource" path="res://data/items/quickstring_glove.tres" id="1_vm2o2"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="2_a8xrx"]
+
+[resource]
+script = ExtResource("2_a8xrx")
+id = &"frenzy_gauntlets"
+display_name = "Frenzy Gauntlets"
+description = "Attack speed, and lots of it."
+icon = "gauntlets"
+color = Color(1, 0.62352943, 0.2627451, 1)
+tier = 2
+cost = 450
+components = Array[Resource]([ExtResource("1_vm2o2")])
+bonus_damage = 6.0
+bonus_attack_speed = 0.45

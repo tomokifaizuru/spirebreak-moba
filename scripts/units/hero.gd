@@ -55,6 +55,13 @@ var last_hurt_time := -99.0
 ## Set by the HUD while you drag a skill button: {"slot", "dir", "mag"}.
 var aim_preview := {}
 var fountain := Vector2.ZERO
+## Owned items (max MatchConfig.item_slots); buying/combining lives in Shop.
+var items: Array[ItemData] = []
+## Cooldown of the active item (Blink Charm / Phase Charm).
+var item_cd := 0.0
+## From items: skill cooldown reduction (capped at 40%) and basic-attack lifesteal.
+var cdr := 0.0
+var item_lifesteal := 0.0
 var distance_moved := 0.0
 var font: Font
 
@@ -95,6 +102,77 @@ func _recalc_stats() -> void:
 	attack_range = data.attack_range
 	attack_interval = data.attack_interval * pow(0.98, l)
 	move_speed = data.move_speed
+	var aspd := 0.0
+	cdr = 0.0
+	item_lifesteal = 0.0
+	for it in items:
+		max_hp += it.bonus_hp
+		max_mana += it.bonus_mana
+		hp_regen += it.bonus_hp_regen
+		mana_regen += it.bonus_mana_regen
+		armor += it.bonus_armor
+		attack_damage += it.bonus_damage
+		move_speed += it.bonus_move_speed
+		aspd += it.bonus_attack_speed
+		cdr += it.cooldown_reduction
+		item_lifesteal += it.lifesteal
+	attack_interval /= 1.0 + aspd
+	cdr = minf(cdr, 0.4)
+
+
+## Re-applies stats after the item list changed (adds any flat max HP / mana gain).
+func items_changed() -> void:
+	var oh := max_hp
+	var om := max_mana
+	_recalc_stats()
+	if alive:
+		hp = clampf(hp + maxf(0.0, max_hp - oh), 0.0, max_hp)
+		mana = clampf(mana + maxf(0.0, max_mana - om), 0.0, max_mana)
+	else:
+		hp = minf(hp, max_hp)
+		mana = minf(mana, max_mana)
+
+
+func active_item() -> ItemData:
+	for it in items:
+		if it.active != "none" and it.active != "":
+			return it
+	return null
+
+
+func can_use_item() -> bool:
+	return alive and stun_t <= 0.0 and dash.is_empty() and item_cd <= 0.0 and active_item() != null
+
+
+## Uses the active item. Blink: `aim` may hold "dir" (+ "mag" 0..1 = fraction of max range)
+## or "point"; empty = full range toward the move direction / facing.
+func use_item(aim := {}) -> bool:
+	if not can_use_item():
+		return false
+	var it := active_item()
+	if it.active == "blink":
+		var dir := facing
+		var dist := it.active_range
+		if aim.has("point"):
+			var v: Vector2 = aim["point"] - position
+			dist = minf(v.length(), it.active_range)
+			if v.length() > 1.0:
+				dir = v.normalized()
+		elif aim.has("dir") and (aim["dir"] as Vector2).length() > 0.01:
+			dir = (aim["dir"] as Vector2).normalized()
+			if aim.has("mag"):
+				dist = it.active_range * clampf(float(aim["mag"]), 0.25, 1.0)
+		elif input_move.length() > 0.1:
+			dir = input_move.normalized()
+		var from := position
+		position = from + dir * dist
+		arena.clamp_pos(self)
+		facing = dir
+		recall_t = 0.0
+		has_move_point = false
+		item_cd = it.active_cooldown
+		arena.on_blink(self, from, position)
+	return true
 
 
 func xp_needed() -> float:
@@ -256,6 +334,8 @@ func cast_heal() -> bool:
 func step(dt: float) -> void:
 	if not alive:
 		respawn_t -= dt
+		if is_bot_controlled() and fmod(respawn_t, 1.0) < dt:
+			brain.try_shop()
 		if respawn_t <= 0.0:
 			respawn()
 		return
@@ -266,6 +346,7 @@ func step(dt: float) -> void:
 		cds[i] = maxf(0.0, cds[i] - dt)
 	attack_cd -= dt
 	heal_cd -= dt
+	item_cd -= dt
 	anim_t = maxf(0.0, anim_t - dt)
 	haste_t -= dt
 	frenzy_t -= dt
@@ -371,6 +452,8 @@ func _do_attack(t: Unit) -> void:
 		big = true
 	if data.ranged_attack:
 		var p := arena.spawn_homing(self, t, dmg, data.projectile_speed, data.projectile_style, facing * radius)
+		if item_lifesteal > 0.0:
+			p.on_hit = _lifesteal_hit
 		if big:
 			p.style = "bolt"
 		arena.sfx_at("shoot", position, -4.0)
@@ -378,8 +461,16 @@ func _do_attack(t: Unit) -> void:
 		var dealt := t.take_damage(dmg, self)
 		if frenzy_t > 0.0 and lifesteal > 0.0 and dealt > 0.0:
 			heal(dealt * lifesteal)
+		if item_lifesteal > 0.0 and dealt > 0.0:
+			heal(dealt * item_lifesteal)
 		arena.fx_slash(t.position, facing, t.radius + 14.0, Color(1, 0.6, 0.6) if data.id == &"sable" else Color(1, 1, 0.8))
 		arena.sfx_at("hit", position, -4.0)
+
+
+func _lifesteal_hit(u: Unit, p: Projectile) -> void:
+	var dealt := u.take_damage(p.damage, self, false, true)
+	if dealt > 0.0 and alive:
+		heal(dealt * item_lifesteal)
 
 
 func respawn() -> void:
@@ -462,7 +553,7 @@ func cast(slot: int, aim := {}) -> bool:
 	var a := _resolve_aim(ab, aim)
 	if not _do_ability(ab, r, a, slot):
 		return false
-	cds[slot] = ab.cd_at(r)
+	cds[slot] = ab.cd_at(r) * (1.0 - cdr)
 	mana -= ab.mana_cost
 	if ab.id != &"smoke_veil":
 		stealth_t = 0.0

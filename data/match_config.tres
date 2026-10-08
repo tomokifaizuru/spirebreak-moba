@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="MatchConfig" load_steps=13 format=3]
+[gd_resource type="Resource" script_class="MatchConfig" load_steps=14 format=3]
 
 [ext_resource type="Resource" path="res://data/units/camp_monster.tres" id="1_r4grl"]
 [ext_resource type="Resource" path="res://data/units/creep_melee.tres" id="2_ct44t"]
@@ -11,6 +11,7 @@
 [ext_resource type="Resource" path="res://data/heroes/sable.tres" id="9_8dgrk"]
 [ext_resource type="Resource" path="res://data/heroes/lumi.tres" id="10_mi28r"]
 [ext_resource type="Resource" path="res://data/heroes/kestrel.tres" id="11_aq558"]
+[ext_resource type="Resource" path="res://data/items/catalog.tres" id="11_ct44t"]
 [ext_resource type="Script" path="res://scripts/data/match_config.gd" id="12_hu6tk"]
 
 [resource]
@@ -23,3 +24,8 @@ creep_melee = ExtResource("2_ct44t")
 creep_ranged = ExtResource("3_q5pea")
 creep_siege = ExtResource("4_dpco1")
 camp_monster = ExtResource("1_r4grl")
+passive_gold_per_sec = 2.6
+starting_gold = 300
+gold_hero_kill = 120
+gold_assist = 40
+item_catalog = ExtResource("11_ct44t")

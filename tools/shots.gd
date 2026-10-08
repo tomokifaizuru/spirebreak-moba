@@ -2,6 +2,7 @@ extends SceneTree
 ## Screenshot helper (needs a display, e.g. xvfb-run):
 ##   godot --path . --resolution 1600x740 -s tools/shots.gd -- shot=teamfight out=/tmp/a.png
 ## shot = title | heroselect (pick=<hero id>) | early (at=<seconds>) | teamfight | tower | hud | victory
+##        | shop | teamicons (2+ heroes dead) | camdrag (real touch-drag through the HUD)
 var opts := {"shot": "title", "out": "/tmp/shot.png", "seed": "3", "tries": "5"}
 var arena: Arena
 var frames := 0
@@ -100,6 +101,48 @@ func _process(_d: float) -> bool:
 						phase = 2
 						wait = 30
 						break
+		"shop":
+			if phase == 1 and arena.time > 90.0 and p.alive:
+				arena.sim_substeps = 1
+				p.autopilot = false
+				p.command_stop()
+				p.position = p.fountain + Vector2(140, -60)
+				p.items.clear()
+				p.items_changed()
+				var cat: ItemCatalog = arena.config.item_catalog
+				p.gold = 2000
+				for id in ["swift_boots", "iron_blade", "oakheart_charm"]:
+					for it in cat.all_items():
+						if String(it.id) == id:
+							Shop.buy(p, it)
+				p.gold = 1140
+				var cv: HudCanvas = arena.hud.canvas
+				cv.shop.open()
+				for it in cat.upgraded:
+					if it.id == &"storm_edge":
+						cv.shop.selected = it
+				phase = 2
+				wait = 25
+		"teamicons":
+			if phase == 1 and arena.time > 100.0 and p.alive:
+				var dead := [0, 0]
+				for h in arena.heroes:
+					if not h.alive and h.respawn_t > 2.0:
+						dead[h.team] += 1
+				if dead[0] + dead[1] >= 2:
+					arena.sim_substeps = 1
+					phase = 2
+					wait = 3
+		"camdrag":
+			if phase == 1 and arena.time > 70.0 and p.alive:
+				arena.sim_substeps = 1
+				var cv2: HudCanvas = arena.hud.canvas
+				var a0 := Vector2(cv2.size.x * 0.62, cv2.size.y * 0.42)
+				cv2._press(7, a0)
+				cv2._drag(7, a0 + Vector2(-120, 80))
+				cv2._drag(7, a0 + Vector2(-330, 230))
+				phase = 2
+				wait = 40
 		"victory":
 			if phase == 1:
 				arena.sim_substeps = 30

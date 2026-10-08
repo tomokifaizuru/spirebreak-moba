@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=4 format=3]
+
+[ext_resource type="Resource" path="res://data/items/oakheart_charm.tres" id="1_8nwmd"]
+[ext_resource type="Resource" path="res://data/items/stoneskin_buckler.tres" id="2_hiweg"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_1x65d"]
+
+[resource]
+script = ExtResource("3_1x65d")
+id = &"titan_plate"
+display_name = "Titan Plate"
+description = "Huge HP and armor for the front line."
+icon = "plate"
+color = Color(0.6901961, 0.72156864, 0.78431374, 1)
+tier = 2
+cost = 450
+components = Array[Resource]([ExtResource("1_8nwmd"), ExtResource("2_hiweg")])
+bonus_hp = 400.0
+bonus_hp_regen = 3.0
+bonus_armor = 12.0

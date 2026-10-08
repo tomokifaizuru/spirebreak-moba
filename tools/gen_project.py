@@ -19,7 +19,7 @@ config_version=5
 
 config/name="Spirebreak"
 config/description="Original 3v3 one-lane mobile MOBA prototype (bots)"
-config/version="0.2"
+config/version="0.3"
 run/main_scene="res://scenes/title.tscn"
 config/features=PackedStringArray("4.5", "GL Compatibility")
 boot_splash/bg_color=Color(0.07, 0.08, 0.12, 1)

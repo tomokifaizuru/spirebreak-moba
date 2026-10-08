@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Resource" path="res://data/items/moonwell_pendant.tres" id="1_jgjh1"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="2_4eu32"]
+
+[resource]
+script = ExtResource("2_4eu32")
+id = &"sage_crown"
+display_name = "Sage Crown"
+description = "Big mana and shorter skill cooldowns."
+icon = "crown"
+color = Color(1, 0.827451, 0.41960785, 1)
+tier = 2
+cost = 500
+components = Array[Resource]([ExtResource("1_jgjh1")])
+bonus_mana = 320.0
+bonus_mana_regen = 3.0
+cooldown_reduction = 0.2
