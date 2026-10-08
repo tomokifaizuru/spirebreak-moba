@@ -34,10 +34,16 @@ extends Resource
 
 @export_group("Jungle")
 @export var camp_monster: UnitStats
-## Monsters per camp.
+## The bigger camp's monster (more HP, more gold).
+@export var camp_monster_big: UnitStats
+## Monsters in a small camp.
 @export var monsters_per_camp := 2
+## Monsters in the big camp.
+@export var monsters_per_big_camp := 1
 ## Seconds before a cleared camp comes back.
 @export var camp_respawn := 60.0
+## Big camps take longer to come back.
+@export var big_camp_respawn := 90.0
 
 @export_group("Gold")
 @export var passive_gold_per_sec := 2.0
@@ -52,6 +58,8 @@ extends Resource
 @export_group("Shop and items")
 ## Every item + bot build orders (data/items/catalog.tres, written by tools/make_items.gd).
 @export var item_catalog: ItemCatalog
+## Recommended buy order per hero (data/builds/*.tres, written by tools/make_builds.gd).
+@export var recommended_builds: Array[BuildData] = []
 ## You can buy while within this distance of your fountain (or while dead).
 @export var shop_radius := 750.0
 @export_range(1, 6) var item_slots := 6

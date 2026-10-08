@@ -143,7 +143,7 @@ func _draw() -> void:
 	var y := pr.position.y + 64.0
 	var cols := 4
 	var tw := (left_w - 18.0 - (cols - 1) * 8.0) / cols
-	var th := minf(84.0, (pr.size.y - 64.0 - 2 * 24.0 - 3 * 8.0 - 14.0) / 4.0)
+	var th := minf(74.0, (pr.size.y - 64.0 - 2 * 24.0 - 3 * 8.0 - 60.0) / 4.0)
 	for group in [["BASIC ITEMS", catalog().basic], ["UPGRADES  (components + recipe)", catalog().upgraded]]:
 		_text(Vector2(gx0, y + 14), group[0], 14, Color(1, 1, 1, 0.6))
 		y += 22.0
@@ -154,11 +154,37 @@ func _draw() -> void:
 			rects[it] = r
 			_draw_tile(r, it, p)
 		y += ceili(list.size() / float(cols)) * (th + 8.0) + 4.0
+	# recommended path for your hero
+	_draw_recommended(Rect2(gx0, pr.end.y - 50.0, left_w - 18.0, 40.0), p)
 	# detail pane
 	var dr := Rect2(pr.position.x + left_w + 10.0, pr.position.y + 60.0, pr.size.x - left_w - 28.0, pr.size.y - 74.0)
 	_box(dr, Color(1, 1, 1, 0.04), Color(1, 1, 1, 0.12), 12, 1)
 	if selected != null:
 		_draw_detail(dr, selected, p, at_base)
+
+
+func _draw_recommended(r: Rect2, p: Hero) -> void:
+	var build: BuildData = null
+	for b in arena.config.recommended_builds:
+		if b != null and b.hero == p.data:
+			build = b
+	if build == null:
+		return
+	_box(r, Color(1, 0.85, 0.4, 0.07), Color(1, 0.85, 0.4, 0.35), 10, 1)
+	_text(r.position + Vector2(10, 25), "RECOMMENDED", 12, Color("ffd36b"))
+	var x := r.position.x + 108.0
+	for i in build.items.size():
+		var it: ItemData = build.items[i]
+		var c := Vector2(x + 16, r.get_center().y)
+		var owned := Shop.has_or_built(p, it)
+		draw_circle(c, 15.0, Color(it.color.darkened(0.7), 0.95))
+		draw_arc(c, 15.0, 0, TAU, 20, Color("7fe08a") if owned else Color(1, 1, 1, 0.25), 2.0, true)
+		ItemIcons.draw(self, it.icon, c, 11.0, it.color)
+		rects[it] = Rect2(c - Vector2(16, 16), Vector2(32, 32)) if not rects.has(it) else rects[it]
+		x += 40.0
+		if i < build.items.size() - 1:
+			_text(Vector2(x + 2, r.get_center().y + 5), ">", 14, Color(1, 1, 1, 0.5), 1)
+			x += 14.0
 
 
 func _draw_tile(r: Rect2, it: ItemData, p: Hero) -> void:

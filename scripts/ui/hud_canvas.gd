@@ -37,6 +37,11 @@ var mm_river := PackedVector2Array()
 var lay := {}
 var portrait_tex: Texture2D
 var shop: ShopPanel
+var board: Scoreboard
+## Recommendation popup state.
+var rec_item: ItemData = null
+var rec_hidden_id := &""
+var rec_cd := 0.0
 ## Team bar portraits: hero -> {"tex": ViewportTexture, "gray": ImageTexture, "color": ImageTexture}
 var team_icons := {}
 var icon_frames := 0
@@ -85,6 +90,9 @@ func setup(a: Arena) -> void:
 	shop.canvas = self
 	shop.arena = a
 	add_child(shop)
+	board = Scoreboard.new()
+	board.arena = a
+	add_child(board)
 	# who is in this match
 	var mates: Array[String] = []
 	var foes: Array[String] = []
@@ -121,6 +129,7 @@ func _process(delta: float) -> void:
 	toast_t -= delta
 	_update_camera(delta)
 	_build_gray_icons()
+	_update_recommendation(delta)
 	_probe(delta)
 	queue_redraw()
 
@@ -145,9 +154,11 @@ func _probe(delta: float) -> void:
 	for it in p.items:
 		ids.append(String(it.id))
 	var st := {"time": arena.time, "gold": p.gold, "items": ids, "shop_open": shop.visible,
+		"board_open": board.visible, "rec": String(rec_item.id) if rec_item != null else "",
 		"at_base": Shop.can_shop_here(p), "cam_free": cam_pan != Vector2.INF,
 		"cam_offset": arena.cam_focus.distance_to(p.position), "alive": p.alive,
-		"selected": String(shop.selected.id) if shop.selected != null else ""}
+		"selected": String(shop.selected.id) if shop.selected != null else "",
+		"music": (get_node("/root/Game") as Node).get("music_volume")}
 	JavaScriptBridge.eval("window.sbState=" + JSON.stringify(st) + ";", true)
 
 
@@ -280,6 +291,10 @@ func _layout() -> Dictionary:
 	d["minimap"] = Rect2(m, m, 190.0, 190.0)
 	d["shop"] = Rect2(m, m + 204.0, 112.0, 50.0)
 	d["center"] = Rect2(m + 120.0, m + 204.0, 70.0, 50.0)
+	d["scorebtn"] = Rect2(m, m + 260.0, 112.0, 36.0)
+	d["rec"] = Rect2(m + 200.0, m + 204.0, 250.0, 92.0)
+	d["rec_buy"] = Rect2(m + 200.0 + 250.0 - 86.0, m + 204.0 + 50.0, 76.0, 34.0)
+	d["rec_x"] = Rect2(m + 200.0 + 250.0 - 30.0, m + 204.0 + 4.0, 26.0, 24.0)
 	d["score"] = Rect2(s.x * 0.5 - 112.0, 8.0, 224.0, 60.0)
 	d["icon_r"] = 21.0
 	d["pause"] = Vector2(s.x - m - 26.0, m + 26.0)
@@ -351,9 +366,13 @@ func _unhandled_input(event: InputEvent) -> void:
 	if arena == null or arena.player == null or arena.over:
 		return
 	if event.is_action_pressed("pause"):
-		if shop.visible and event is InputEventKey and (event as InputEventKey).keycode == KEY_ESCAPE:
-			shop.close()
-			return
+		if event is InputEventKey and (event as InputEventKey).keycode == KEY_ESCAPE:
+			if board.visible:
+				board.close()
+				return
+			if shop.visible:
+				shop.close()
+				return
 		hud.toggle_pause()
 		return
 	if get_tree().paused:
@@ -376,6 +395,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event is InputEventKey and event.pressed and not event.echo and (event as InputEventKey).keycode == KEY_TAB:
 		toggle_shop()
 		get_viewport().set_input_as_handled()
+	elif event is InputEventKey and event.pressed and not event.echo and (event as InputEventKey).keycode == KEY_O:
+		toggle_board()
+		get_viewport().set_input_as_handled()
 	elif event is InputEventKey and event.pressed and not event.echo and (event as InputEventKey).keycode == KEY_G:
 		_use_item({"point": _to_world(mouse_pos)} if now() - last_mouse_t < 4.0 else {})
 	elif event is InputEventKey and event.pressed and not event.echo and (event as InputEventKey).keycode == KEY_C:
@@ -391,6 +413,14 @@ func _key_cast(slot: int) -> void:
 		aim = {"point": _to_world(mouse_pos)}
 	if not arena.player.cast(slot, aim):
 		_explain_fail(slot)
+
+
+func toggle_board() -> void:
+	if board.visible:
+		board.close()
+	else:
+		release_all()
+		board.open()
 
 
 func toggle_shop() -> void:
@@ -434,6 +464,10 @@ func _press(id: int, pos: Vector2) -> void:
 	lay = _layout()
 	var p := arena.player
 	var role := ""
+	if board.visible:
+		board.press(pos)
+		get_viewport().set_input_as_handled()
+		return
 	if shop.visible:
 		shop.press(pos)
 		get_viewport().set_input_as_handled()
@@ -466,6 +500,25 @@ func _press(id: int, pos: Vector2) -> void:
 			return
 		if (lay["center"] as Rect2).grow(4).has_point(pos):
 			reset_camera()
+			get_viewport().set_input_as_handled()
+			return
+		if (lay["scorebtn"] as Rect2).grow(4).has_point(pos) or (lay["score"] as Rect2).grow(4).has_point(pos):
+			toggle_board()
+			get_viewport().set_input_as_handled()
+			return
+		if rec_item != null and (lay["rec_x"] as Rect2).grow(4).has_point(pos):
+			rec_hidden_id = rec_item.id
+			rec_item = null
+			get_viewport().set_input_as_handled()
+			return
+		if rec_item != null and (lay["rec_buy"] as Rect2).grow(4).has_point(pos):
+			_buy_recommended()
+			get_viewport().set_input_as_handled()
+			return
+		if rec_item != null and (lay["rec"] as Rect2).has_point(pos):
+			toggle_shop()  # tap the popup body = open the shop on that item
+			if shop.visible:
+				shop.selected = rec_item
 			get_viewport().set_input_as_handled()
 			return
 		if (lay["minimap"] as Rect2).has_point(pos):
@@ -641,6 +694,8 @@ func _draw() -> void:
 	_draw_minimap(lay["minimap"])
 	_draw_shop(lay["shop"])
 	_draw_center_button(lay["center"])
+	_draw_score_button(lay["scorebtn"])
+	_draw_recommendation()
 	_draw_score(lay["score"])
 	_draw_team_icons(lay["score"])
 	_draw_top_right()
@@ -676,7 +731,7 @@ func _draw_minimap(r: Rect2) -> void:
 	var lane := PackedVector2Array()
 	for q in mm_lane:
 		lane.append(o + q * k)
-	draw_polyline(lane, Color("d8b98a"), 7.0, true)
+	draw_polyline(lane, Color("d8b98a"), 10.0, true)
 	for t in [0, 1]:
 		draw_circle(o + arena.map.base_center(t) * k, 15.0, Color(Art.team_color(t), 0.55))
 	for s in arena.structures:
@@ -691,8 +746,19 @@ func _draw_minimap(r: Rect2) -> void:
 	for u in arena.units:
 		if u.alive and u.kind == Unit.Kind.CREEP:
 			draw_rect(Rect2(o + u.position * k - Vector2(1.5, 1.5), Vector2(3, 3)), Art.team_color(u.team).lightened(0.2))
-		elif u.alive and u.kind == Unit.Kind.NEUTRAL:
-			draw_circle(o + u.position * k, 2.0, Color("e0d050"))
+	# camps: a dot while the monsters are up, a faint ring while they respawn
+	for camp in arena.camps:
+		var c3 := o + (camp["pos"] as Vector2) * k
+		var up := false
+		for m in arena.neutrals:
+			if m.alive and m.camp_index == camp["index"]:
+				up = true
+				break
+		var big: bool = camp.get("big", false)
+		if up:
+			draw_circle(c3, 4.0 if big else 2.6, Color("e0d050") if big else Color("c8b24a"))
+		else:
+			draw_arc(c3, 4.0 if big else 2.6, 0, TAU, 12, Color(1, 1, 1, 0.35), 1.0, true)
 	for h in arena.heroes:
 		if not h.alive:
 			continue
@@ -731,6 +797,94 @@ func _draw_shop(r: Rect2) -> void:
 	_text(Vector2(r.position.x + 66.0, r.position.y + 23.0), "SHOP", 18, Color.WHITE, 1, 3)
 	_text(Vector2(r.position.x + 66.0, r.position.y + 42.0), "buy now" if at_base else "at base", 12,
 			Color("b8ffb0") if at_base else Color(1, 0.9, 0.6, 0.8), 1)
+
+
+func _draw_score_button(r: Rect2) -> void:
+	var sb := sb_panel.duplicate() as StyleBoxFlat
+	sb.bg_color = Color(0.16, 0.2, 0.32, 0.85)
+	draw_style_box(sb, r)
+	_text(Vector2(r.get_center().x, r.position.y + 24.0), "SCORE", 15, Color.WHITE, 1, 3)
+
+
+## The next recommended item the player can pay for right now (null = nothing to suggest).
+func _next_recommendation() -> ItemData:
+	var p := arena.player
+	if p == null or arena.config == null:
+		return null
+	var build: BuildData = null
+	for b in arena.config.recommended_builds:
+		if b != null and b.hero == p.data:
+			build = b
+	if build == null:
+		return null
+	for it in build.items:
+		if it == null or Shop.has_or_built(p, it):
+			continue
+		if Shop.block_reason(p, it, false) == "Inventory full":
+			continue
+		if p.gold >= Shop.price_for(p, it):
+			return it
+		return null  # save up for the next one in order
+	return null
+
+
+func _update_recommendation(delta: float) -> void:
+	rec_cd -= delta
+	if rec_cd > 0.0 or board == null or board.visible or shop.visible:
+		return
+	rec_cd = 0.4
+	var nxt := _next_recommendation()
+	if nxt != null and nxt.id == rec_hidden_id:
+		nxt = null
+	if nxt == null or (rec_item != null and nxt.id != rec_item.id):
+		rec_hidden_id = &""
+	rec_item = nxt
+
+
+func _buy_recommended() -> void:
+	var p := arena.player
+	if rec_item == null:
+		return
+	if not Shop.can_shop_here(p):
+		toast("Return to base to buy", 1.4)
+		return
+	var it := rec_item
+	if Shop.buy(p, it):
+		toast("Bought %s" % it.display_name, 1.4)
+		rec_item = null
+		rec_hidden_id = &""
+
+
+func _draw_recommendation() -> void:
+	if rec_item == null or shop.visible or board.visible:
+		return
+	var it := rec_item
+	var p := arena.player
+	var r: Rect2 = lay["rec"]
+	var sb := sb_panel.duplicate() as StyleBoxFlat
+	sb.bg_color = Color(0.09, 0.1, 0.15, 0.94)
+	sb.border_color = Color("ffd36b")
+	sb.set_border_width_all(2)
+	draw_style_box(sb, r)
+	var ic := r.position + Vector2(30, 46)
+	draw_circle(ic, 22.0, Color(it.color.darkened(0.7), 0.95))
+	ItemIcons.draw(self, it.icon, ic, 17.0, it.color)
+	_text(r.position + Vector2(60, 20), "NEXT RECOMMENDED", 11, Color("ffd36b"))
+	var nsz := 15 if font.get_string_size(it.display_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x < 150.0 else 13
+	_text(r.position + Vector2(60, 41), it.display_name, nsz, Color.WHITE, 0, 3)
+	var price := Shop.price_for(p, it)
+	Art.draw_icon(self, "coin", r.position + Vector2(68, 64), 8.0)
+	_text(r.position + Vector2(80, 69), str(price), 15, Art.GOLD)
+	var xr: Rect2 = lay["rec_x"]
+	draw_line(xr.get_center() + Vector2(-6, -6), xr.get_center() + Vector2(6, 6), Color(1, 1, 1, 0.8), 2.0, true)
+	draw_line(xr.get_center() + Vector2(6, -6), xr.get_center() + Vector2(-6, 6), Color(1, 1, 1, 0.8), 2.0, true)
+	var br: Rect2 = lay["rec_buy"]
+	var at_base := Shop.can_shop_here(p)
+	var bsb := sb_panel.duplicate() as StyleBoxFlat
+	bsb.bg_color = Color("2f9d5a") if at_base else Color(0.3, 0.32, 0.38, 0.9)
+	bsb.set_corner_radius_all(8)
+	draw_style_box(bsb, br)
+	_text(Vector2(br.get_center().x, br.position.y + 23), "BUY" if at_base else "AT BASE", 13, Color.WHITE if at_base else Color(1, 1, 1, 0.6), 1, 3)
 
 
 func _draw_center_button(r: Rect2) -> void:

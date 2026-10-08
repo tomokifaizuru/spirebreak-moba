@@ -91,3 +91,22 @@ static func consumed_items(h: Hero, it: ItemData) -> Array:
 	var used: Array = []
 	_consumed(h, it, h.items.duplicate(), used)
 	return used
+
+
+## True when the hero owns the item or an upgrade that was built from it (e.g. boots -> treads).
+static func has_or_built(h: Hero, it: ItemData) -> bool:
+	for x in h.items:
+		if _contains(x, it):
+			return true
+	return false
+
+
+static func _contains(root: ItemData, it: ItemData) -> bool:
+	if root == null:
+		return false
+	if root.id == it.id:
+		return true
+	for c in root.components:
+		if c != null and _contains(c as ItemData, it):
+			return true
+	return false

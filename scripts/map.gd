@@ -8,7 +8,7 @@ extends Node2D
 ##  - "Camps" holds the jungle camp positions.
 
 @export var map_size := Vector2(5100, 5100)
-@export var lane_width := 210.0
+@export var lane_width := 315.0
 @export var river_width := 190.0
 @export var base_radius := 470.0
 ## Change to get a different tree layout.
@@ -109,6 +109,15 @@ func shrine_pos() -> Vector2:
 
 func camp_positions() -> PackedVector2Array:
 	return markers("Camps")
+
+
+## A camp is "big" when its marker's gizmo_extents is 70 or more (set in the map scene).
+func is_big_camp(index: int) -> bool:
+	var n := get_node_or_null("Camps")
+	if n == null or index >= n.get_child_count():
+		return false
+	var m := n.get_child(index) as Marker2D
+	return m != null and m.gizmo_extents >= 70.0
 
 
 static func dist_to_poly(p: Vector2, poly: PackedVector2Array) -> float:

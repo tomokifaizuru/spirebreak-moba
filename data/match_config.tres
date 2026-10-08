@@ -1,7 +1,8 @@
-[gd_resource type="Resource" script_class="MatchConfig" load_steps=14 format=3]
+[gd_resource type="Resource" script_class="MatchConfig" load_steps=22 format=3]
 
 [ext_resource type="Resource" path="res://data/units/camp_monster.tres" id="1_r4grl"]
 [ext_resource type="Resource" path="res://data/units/creep_melee.tres" id="2_ct44t"]
+[ext_resource type="Resource" path="res://data/units/camp_monster_big.tres" id="2_mi28r"]
 [ext_resource type="Resource" path="res://data/units/creep_ranged.tres" id="3_q5pea"]
 [ext_resource type="Resource" path="res://data/units/creep_siege.tres" id="4_dpco1"]
 [ext_resource type="Script" path="res://scripts/data/hero_data.gd" id="5_2ytcg"]
@@ -13,6 +14,13 @@
 [ext_resource type="Resource" path="res://data/heroes/kestrel.tres" id="11_aq558"]
 [ext_resource type="Resource" path="res://data/items/catalog.tres" id="11_ct44t"]
 [ext_resource type="Script" path="res://scripts/data/match_config.gd" id="12_hu6tk"]
+[ext_resource type="Script" path="res://scripts/data/build_data.gd" id="13_8dgrk"]
+[ext_resource type="Resource" path="res://data/builds/morrow.tres" id="14_mi28r"]
+[ext_resource type="Resource" path="res://data/builds/rook.tres" id="15_aq558"]
+[ext_resource type="Resource" path="res://data/builds/sable.tres" id="16_hu6tk"]
+[ext_resource type="Resource" path="res://data/builds/lumi.tres" id="17_d0w4c"]
+[ext_resource type="Resource" path="res://data/builds/kestrel.tres" id="18_klrmw"]
+[ext_resource type="Resource" path="res://data/builds/calla.tres" id="19_w0v3t"]
 
 [resource]
 script = ExtResource("12_hu6tk")
@@ -24,8 +32,10 @@ creep_melee = ExtResource("2_ct44t")
 creep_ranged = ExtResource("3_q5pea")
 creep_siege = ExtResource("4_dpco1")
 camp_monster = ExtResource("1_r4grl")
+camp_monster_big = ExtResource("2_mi28r")
 passive_gold_per_sec = 2.6
 starting_gold = 300
 gold_hero_kill = 120
 gold_assist = 40
 item_catalog = ExtResource("11_ct44t")
+recommended_builds = Array[ExtResource("13_8dgrk")]([ExtResource("14_mi28r"), ExtResource("15_aq558"), ExtResource("16_hu6tk"), ExtResource("17_d0w4c"), ExtResource("18_klrmw"), ExtResource("19_w0v3t")])

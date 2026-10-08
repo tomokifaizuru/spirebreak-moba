@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="BuildData" load_steps=9 format=3]
+
+[ext_resource type="Resource" path="res://data/heroes/morrow.tres" id="1_r3g4t"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="2_428lg"]
+[ext_resource type="Resource" path="res://data/items/swift_boots.tres" id="3_npxc5"]
+[ext_resource type="Resource" path="res://data/items/oakheart_charm.tres" id="4_r0ya0"]
+[ext_resource type="Resource" path="res://data/items/stoneskin_buckler.tres" id="5_tiiv7"]
+[ext_resource type="Resource" path="res://data/items/gale_treads.tres" id="6_5gsih"]
+[ext_resource type="Resource" path="res://data/items/titan_plate.tres" id="7_ulwdf"]
+[ext_resource type="Script" path="res://scripts/data/build_data.gd" id="8_loigs"]
+
+[resource]
+script = ExtResource("8_loigs")
+hero = ExtResource("1_r3g4t")
+items = Array[ExtResource("2_428lg")]([ExtResource("3_npxc5"), ExtResource("4_r0ya0"), ExtResource("5_tiiv7"), ExtResource("6_5gsih"), ExtResource("7_ulwdf")])

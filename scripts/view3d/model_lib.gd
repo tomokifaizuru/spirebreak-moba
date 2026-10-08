@@ -185,6 +185,25 @@ static func thornling() -> Mesh:
 		return b.commit())
 
 
+## Brambleback: the big camp monster (bark-brown body, stone horns, glowing eyes).
+static func brambleback() -> Mesh:
+	return _cached("brambleback", func() -> Mesh:
+		var b := MeshKit.Builder.new(83)
+		b.add(MeshKit.sphere(0.26, 8, 5, 0.42), Color("7a5232"), MeshKit.xf(Vector3(0, 0.24, 0), Vector3.ZERO, Vector3(1.1, 0.9, 1.0)), 0.03)
+		b.add(MeshKit.sphere(0.2, 7, 4, 0.4), Color("4f8a34"), MeshKit.xf(Vector3(0, 0.36, -0.06), Vector3.ZERO, Vector3(1.0, 0.6, 1.0)), 0.03)
+		for i in 9:
+			var a := deg_to_rad(i * 40.0)
+			b.add(MeshKit.cone(0.05, 0.18, 4), Color("2f6a2a"), MeshKit.xf(Vector3(cos(a) * 0.18, 0.4, sin(a) * 0.18 - 0.05), Vector3(sin(a) * 50.0, 0, -cos(a) * 50.0)))
+		b.add(MeshKit.cone(0.05, 0.2, 5), Color("d9d2bf"), MeshKit.xf(Vector3(-0.13, 0.42, 0.16), Vector3(30, 0, 35)))
+		b.add(MeshKit.cone(0.05, 0.2, 5), Color("d9d2bf"), MeshKit.xf(Vector3(0.13, 0.42, 0.16), Vector3(30, 0, -35)))
+		b.add(MeshKit.box(0.07, 0.05, 0.02), Color("ff8a3a"), MeshKit.xf(Vector3(-0.08, 0.3, 0.25)))
+		b.add(MeshKit.box(0.07, 0.05, 0.02), Color("ff8a3a"), MeshKit.xf(Vector3(0.08, 0.3, 0.25)))
+		for x in [-0.14, 0.14]:
+			for z in [-0.1, 0.1]:
+				b.add(MeshKit.box(0.09, 0.1, 0.09), Color("3d2e1c"), MeshKit.xf(Vector3(x, 0.05, z)))
+		return b.commit())
+
+
 # ---------------- projectiles ----------------
 
 ## Projectile mesh pointing along +Z.

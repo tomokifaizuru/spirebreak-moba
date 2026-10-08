@@ -10,9 +10,10 @@ const SELECT_SCENE := "res://scenes/hero_select.tscn"
 const CONFIG_PATH := "res://data/match_config.tres"
 
 var title := "Spirebreak"
-var version := "0.3"
-var sfx_volume := 0.8
-var music_volume := 0.7
+var version := "0.4"
+var sfx_volume := 1.0
+## Fresh installs start the music at 25% (slider position); a saved setting always wins.
+var music_volume := 0.25
 ## Debug flags from the command line (-- autopilot speed=4) or the web URL (#autopilot&speed=4).
 var debug_args := {}
 ## The hero picked on the hero select screen (null until you pick one).
@@ -24,7 +25,7 @@ var next_lineup := {}
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	title = str(ProjectSettings.get_setting("application/config/name", "Spirebreak"))
-	version = str(ProjectSettings.get_setting("application/config/version", "0.3"))
+	version = str(ProjectSettings.get_setting("application/config/version", "0.4"))
 	_read_debug_args()
 	_load_settings()
 	_apply_volume()

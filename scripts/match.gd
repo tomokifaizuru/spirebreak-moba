@@ -55,6 +55,8 @@ var backdoor_t := 0.0
 var shrine_cd := 0.0
 var shrine_pos := Vector2.ZERO
 var camps: Array = []
+## Neutral monsters killed by each team's heroes (stats / sims).
+var jungle_kills := [0, 0]
 var gold_acc := 0.0
 var joy_vector := Vector2.ZERO
 var look_override := Vector2.INF
@@ -73,8 +75,11 @@ func _ready() -> void:
 		units.append(s)
 		structures.append(s)
 	shrine_pos = map.shrine_pos()
+	var ci := 0
 	for p in map.camp_positions():
-		camps.append({"pos": p, "respawn_t": 0.0, "index": camps.size()})
+		var big := map.is_big_camp(ci)
+		camps.append({"pos": p, "respawn_t": 0.0, "index": ci, "big": big})
+		ci += 1
 	var game0 := get_node_or_null("/root/Game")
 	if lineup.is_empty() and game0 != null and not game0.next_lineup.is_empty():
 		lineup = game0.next_lineup
@@ -313,11 +318,14 @@ func _camps(dt: float) -> void:
 			continue
 		camp["respawn_t"] -= dt
 		if camp["respawn_t"] <= 0.0:
-			camp["respawn_t"] = config.camp_respawn
-			for i in config.monsters_per_camp:
+			var big: bool = camp.get("big", false)
+			var stats: UnitStats = config.camp_monster_big if (big and config.camp_monster_big != null) else config.camp_monster
+			var n: int = config.monsters_per_big_camp if big else config.monsters_per_camp
+			camp["respawn_t"] = config.big_camp_respawn if big else config.camp_respawn
+			for i in n:
 				var m := NeutralMob.new()
-				var off := Vector2.from_angle(i * TAU / maxf(config.monsters_per_camp, 1) + 0.6) * 34.0
-				m.setup(config.camp_monster, self, camp["pos"] + off)
+				var off := Vector2.from_angle(i * TAU / maxf(n, 1) + 0.6) * (46.0 if big else 34.0)
+				m.setup(stats, self, camp["pos"] + off)
 				m.camp_index = camp["index"]
 				units_root.add_child(m)
 				units.append(m)
@@ -520,6 +528,7 @@ func on_unit_died(u: Unit, killer: Unit) -> void:
 			if u.kind == Unit.Kind.NEUTRAL:
 				if kh != null:
 					_share_xp(u, u.bounty_xp, 1 - kh.team)
+					jungle_kills[kh.team] += 1
 			else:
 				_share_xp(u, u.bounty_xp, u.team)
 			units.erase(u)

@@ -132,6 +132,7 @@ func _initialize() -> void:
 	var cr := us("creep_ranged", "Ranged Creep", 240, 0, 27, 300, 1.1, 215, 400, 14, 22, 35, true, 760, 1.0, 0.06, 0.05)
 	var cs := us("creep_siege", "Siege Creep", 720, 10, 42, 330, 1.6, 195, 420, 21, 45, 70, true, 600, 3.0, 0.06, 0.05)
 	var nm := us("camp_monster", "Thornling", 430, 5, 24, 55, 1.1, 260, 0, 18, 20, 45, false, 0)
+	var nb := us("camp_monster_big", "Brambleback", 1100, 9, 42, 70, 1.3, 230, 0, 30, 55, 95, false, 0)
 	us("tower_outer", "Outer Tower", 1750, 28, 125, 420, 1.0, 0, 0, 44, 120, 150, true, 950)
 	us("tower_inner", "Inner Tower", 2050, 32, 145, 420, 1.0, 0, 0, 44, 120, 180, true, 950)
 	us("heartspire", "Heartspire", 2500, 34, 115, 400, 1.2, 0, 0, 70, 0, 0, true, 950)
@@ -177,6 +178,7 @@ func _initialize() -> void:
 	mc.creep_ranged = cr
 	mc.creep_siege = cs
 	mc.camp_monster = nm
+	mc.camp_monster_big = nb
 	ResourceSaver.save(mc, "res://data/match_config.tres")
 	print("data written")
 	quit()

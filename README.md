@@ -1,8 +1,8 @@
-# Spirebreak (v0.3)
+# Spirebreak (v0.4)
 
 An original **3v3 one-lane mobile MOBA** prototype made with **Godot 4.5.1** (GL Compatibility).
-Low-poly chibi 3D, 6 heroes with roles, and (new in v0.3) a **shop with combining items**, team hero
-icons with respawn timers, a free-drag camera, Options (Music / SFX) and a hook for match BGM.
+Low-poly chibi 3D, 6 heroes with roles, a **shop with combining items**, and (new in v0.4) a
+**scoreboard**, **recommended builds** with a buy popup, more **jungle camps**, a wider lane and a balance pass.
 Pick a hero; bots fill the other 5 slots with a random, sensible mix. Destroy the two enemy towers,
 then the **Heartspire**, to win. Matches usually last 7–12 minutes.
 
@@ -13,9 +13,54 @@ then the **Heartspire**, to win. Matches usually last 7–12 minutes.
 The game runs in landscape. On a phone, rotate it sideways. The web build is single-threaded, so it
 needs no special server headers.
 
-![Shop](preview-v0.3-shop.png)
-![Team icons (dead)](preview-v0.3-teamicons-dead.png)
-![Camera drag](preview-v0.3-camdrag.png)
+![Scoreboard](preview-v0.4-scoreboard.png)
+![Recommended item popup](preview-v0.4-recommend.png)
+![Jungle camp](preview-v0.4-jungle.png)
+
+## What's new in v0.4
+
+- **Scoreboard**: tap the score/timer at the top (or the **SCORE** button, or press **O**). It lists all 6
+  heroes by team with portrait, name, role, level, K/D/A, current gold and owned items (bots included).
+  The **RECOMMENDED BUILD** tab shows your hero's full build path. Close it with ✕, by tapping outside it,
+  or with Esc.
+- **Recommended builds**: each hero has a 5-item build in `data/builds/<hero>.tres` (edit it in the
+  Inspector). When you can afford the next item, a gold popup appears by the SHOP button with its icon,
+  name, cost and **BUY**. BUY only works at your fountain; elsewhere the button reads "AT BASE". Tap ✕ to
+  hide the popup until the next item. Tapping the popup itself opens the shop on that item. The shop shows
+  the same path in a "RECOMMENDED" strip. Bots buy their recommended build first, then their role build.
+- **Jungle**: 10 camps instead of 4. There are 8 small Thornling camps (2 monsters, respawn 60 s) and
+  2 big **Brambleback** camps (1 tough monster with 1100 HP, 55 g, 95 XP; respawn 90 s), placed off the lane
+  on both sides. Bots (not the support) farm a nearby camp when their wave is pushed and no enemy hero is
+  close. The big camp needs level 5 and 70% HP. Camps show on the minimap: a dot when up, a ring while
+  respawning, bigger and yellow for big camps.
+- **Wider lane**: 210 → 315 px (1.5×). The bridge widens with it, so teamfights have room. The minimap
+  lane is thicker to match.
+- **Balance**: early damage is flattened (hero base damage, per-level growth and skill damage), so levels
+  1–8 stay close. Ultimates keep the biggest per-rank steps, so heroes still pull apart at levels 10–12 with
+  full items. Sable's level-4 burst is lower (Ember Dash, Twin Fang and Hundred Petals cut 8–20%; Sable gets
+  +40 HP and +1 armor instead). Calla's heals and Kestrel's attack and Piercing Bolt are trimmed. Lumi is
+  sturdier and keeps more damage. Morrow is still the tank (980 HP, 20 armor) but scales less damage per level.
+  Bot-vs-bot table below.
+- **Audio defaults**: a fresh install starts with Music at 25% and SFX at 100%. Saved settings
+  (`user://settings.cfg`) still win.
+
+### Balance: team win rate per hero (bot-vs-bot, 96 games each)
+
+Every match uses all 6 heroes, so this is how often each hero's *team* won. Seeds 1–48 were each played
+normally and with sides swapped.
+
+| Hero | Role | v0.3 (before) | v0.4 (after) |
+|---|---|---|---|
+| Morrow | Tank | 57/96 (59%) | 39/96 (41%) |
+| Rook | Fighter | 39/96 (41%) | 57/96 (59%) |
+| Sable | Assassin | 43/96 (45%) | 39/96 (41%) |
+| Lumi Vesper | Mage | 31/96 (32%) | 43/96 (45%) |
+| Kestrel | Marksman | 57/96 (59%) | 55/96 (57%) |
+| Calla | Support | 61/96 (64%) | 55/96 (57%) |
+| *Spread* | | *32–64%* | *41–59%* |
+
+The v0.4 matches run a bit longer: median 9.3 min, up from 7.7. Bots bought about 34 items per match and
+killed about 53 jungle monsters per match (12–103).
 
 ## What's new in v0.3
 
@@ -93,6 +138,8 @@ Role build orders (bots buy in this order, skipping what they already own / have
 | Ultimate (unlocks at level 4) | Big red button | 4 / R |
 | Active item (Blink) | Purple button next to the skills (drag to aim) | G (blink toward the mouse) |
 | Shop | **SHOP** button (or tap an empty item slot) | Tab |
+| Scoreboard / recommended build | Tap the score/timer or **SCORE** | O |
+| Buy the recommended item | **BUY** on the gold popup (at your fountain) | — |
 | Center camera | **CENTER** button | C |
 | Free look | Drag empty screen (right / center); hold on the minimap | Right / middle-drag, or move the mouse to a screen edge |
 | Recall to base (4 s channel) | RECALL | B |
@@ -141,15 +188,20 @@ Open any of these in the Inspector. The fields are commented, so hover them for 
 |---|---|
 | `data/match_config.tres` | Roster, default lineups, creep waves, gold, XP, respawn, fountain, shrine, recall, heal, tower aggro, sudden death, bot difficulty, **item catalog**, shop radius, match music path |
 | `data/items/*.tres` + `data/items/catalog.tres` | Every shop item (stats, cost, components, active) and the bot build orders per role |
+| `data/builds/*.tres` | Recommended build per hero (popup, scoreboard tab, and the first thing bots buy) |
 | `data/heroes/*.tres` | All 6 heroes: role, tagline, difficulty, HP/mana and growth, damage, attack speed and range, armor, move speed, colours, model scale, skill order, bot retreat HP and aggression |
 | `data/abilities/*.tres` | All 24 skills: aim type, cooldown, mana, damage, range, radius, duration, effect values (per rank) |
-| `data/units/*.tres` | Creeps, jungle monster, towers, Heartspire: HP, armor, damage, range, bounty, growth per minute |
-| `scenes/maps/one_lane.tscn` | The map. Move the Marker2D nodes (Lane, River, Camps, Shrine, Fountains, Structures); the 3D world is built from them |
+| `data/units/*.tres` | Creeps, jungle monsters (Thornling, Brambleback), towers, Heartspire: HP, armor, damage, range, bounty, growth per minute |
+| `scenes/maps/one_lane.tscn` | The map. Move the Marker2D nodes (Lane, River, Camps, Shrine, Fountains, Structures); the 3D world is built from them. A camp marker with Gizmo Extents ≥ 70 is a big camp. The lane width is on the root `Map` node |
 | `scenes/match.tscn` → `Match` node | Camera pitch, distance and field of view |
 
 Other knobs are constants and `@export`s in `scripts/view3d/` (unit display scale, colours, ground grid size).
 `tools/make_data.gd` regenerates the default hero / ability / unit `.tres` files. `tools/make_items.gd`
-regenerates the shop. Running either overwrites any edits you made in the Inspector.
+regenerates the shop. `tools/make_builds.gd` regenerates the recommended builds, and
+`tools/make_v04_data.gd` adds the Brambleback. Running any of them overwrites the edits you made in the
+Inspector. The v0.4 balance numbers live in the `.tres` files (`make_data.gd` still has the older
+numbers), so don't re-run `make_data.gd` unless you want to reset them. `tools/print_stats.gd` prints every
+hero's effective stats and skill damage.
 
 ## Headless test tools
 
@@ -160,10 +212,16 @@ godot --headless --path . --fixed-fps 60 -s tools/sim_match.gd -- seed=1 limit=1
 # Screenshots (needs a display, e.g. xvfb-run):
 godot --path . --resolution 1600x740 -s tools/shots.gd -- shot=shop out=/tmp/a.png
 #   shot = title | heroselect | teamfight | tower | early | victory | shop | teamicons | camdrag
+#          | scoreboard (tab=1) | recommend | jungle
+# The sim prints a "JUNGLE kills=<dawn>-<dusk> camps=10" line.
 ```
 
 ## Versions
 
+- **v0.4**: scoreboard (K/D/A, gold, items for all 6 heroes, plus a build tab); per-hero recommended
+  builds (`.tres`) with a buy popup and a shop strip, which bots follow too; 10 jungle camps (8 small +
+  2 big Brambleback) and bot jungling; lane and bridge 1.5× wider; balance pass that flattens early
+  damage; default Music 25% / SFX 100%.
 - **v0.3**: shop with combining items (~8 basic + ~7 upgrades, Blink active), bots buy by role; 6 HUD
   item slots; team hero icons with grayscale + respawn countdown; free-drag camera with CENTER /
   ease-back; Options menu (Music / SFX, saved); Music bus + match BGM hook; web native-loop head
@@ -174,6 +232,6 @@ godot --path . --resolution 1600x740 -s tools/shots.gd -- shot=shop out=/tmp/a.p
   bot support/fighter AI; balance pass.
 - **v0.1**: one lane with river and bridge, towers and Heartspire, jungle camps, fountains, shrine, creep waves,
   4 heroes, XP/gold/levels, bots, minimap, kill feed, win/lose screen, synthesized SFX.
-- Planned: a jungle boss, manual skill leveling, more heroes, more items / actives.
+- Planned: a jungle boss, manual skill leveling, more heroes, more items / actives, mage-scaling items.
 
 All characters, names, models and art are original and made in code.

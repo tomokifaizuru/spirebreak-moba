@@ -11,3 +11,5 @@ audio/music/*.mp3
 audio/music/*.flac
 audio/music/*.f32
 audio/music/_render*
+audio/music/*.wav.import
+audio/music/*.mp4.import

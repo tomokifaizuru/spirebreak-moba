@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="BuildData" load_steps=9 format=3]
+
+[ext_resource type="Resource" path="res://data/heroes/kestrel.tres" id="1_ritdj"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="2_daa7e"]
+[ext_resource type="Resource" path="res://data/items/quickstring_glove.tres" id="3_a4eaj"]
+[ext_resource type="Resource" path="res://data/items/swift_boots.tres" id="4_kx3vn"]
+[ext_resource type="Resource" path="res://data/items/gale_treads.tres" id="5_odwud"]
+[ext_resource type="Resource" path="res://data/items/iron_blade.tres" id="6_gyy6k"]
+[ext_resource type="Resource" path="res://data/items/storm_edge.tres" id="7_i31uu"]
+[ext_resource type="Script" path="res://scripts/data/build_data.gd" id="8_jybjm"]
+
+[resource]
+script = ExtResource("8_jybjm")
+hero = ExtResource("1_ritdj")
+items = Array[ExtResource("2_daa7e")]([ExtResource("3_a4eaj"), ExtResource("4_kx3vn"), ExtResource("5_odwud"), ExtResource("6_gyy6k"), ExtResource("7_i31uu")])

@@ -371,14 +371,18 @@ class StructVis extends Base:
 # ------------------------------------------------------------------ jungle monster
 class NeutralVis extends Base:
 	var body: MeshInstance3D
+	var big := false
+	var sc := 1.6
 	var t := 0.0
 	var prev_cd := 0.0
 	var atk := 0.0
 
 	func setup(u: Unit, v: WorldView) -> void:
 		super.setup(u, v)
-		body = MeshKit.inst(self, ModelLib.thornling(), MeshKit.xf(Vector3.ZERO, Vector3.ZERO, Vector3.ONE * 1.6))
-		set_shadow(0.5)
+		big = u.radius > 24.0
+		sc = 2.5 if big else 1.6
+		body = MeshKit.inst(self, ModelLib.brambleback() if big else ModelLib.thornling(), MeshKit.xf(Vector3.ZERO, Vector3.ZERO, Vector3.ONE * sc))
+		set_shadow(0.7 if big else 0.5)
 		collect_meshes(self)
 		t = float(u.get_instance_id() % 500) * 0.01
 
@@ -387,7 +391,7 @@ class NeutralVis extends Base:
 		if gone or not is_instance_valid(unit) or not unit.alive:
 			gone = true
 			gone_t += delta
-			body.scale = Vector3(1.6 + gone_t * 2.0, maxf(0.0, 1.6 - gone_t * 4.0), 1.6 + gone_t * 2.0)
+			body.scale = Vector3(sc + gone_t * 2.0, maxf(0.0, sc - gone_t * 4.0), sc + gone_t * 2.0)
 			shadow.visible = false
 			return gone_t < 0.4
 		var n := unit as NeutralMob
@@ -404,7 +408,7 @@ class NeutralVis extends Base:
 		if atk > 0.0:
 			atk -= delta
 			sq += sin((1.0 - atk / 0.3) * PI) * 0.18
-		body.scale = Vector3(1.6 * sq, 1.6 / sq, 1.6 * sq)
+		body.scale = Vector3(sc * sq, sc / sq, sc * sq)
 		set_flash(n.hit_flash > 0.0)
 		return true
 

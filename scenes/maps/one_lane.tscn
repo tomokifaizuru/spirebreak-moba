@@ -103,6 +103,30 @@ gizmo_extents = 50.0
 position = Vector2(3800, 2650)
 gizmo_extents = 50.0
 
+[node name="Camp5" type="Marker2D" parent="Camps"]
+position = Vector2(1750, 2450)
+gizmo_extents = 50.0
+
+[node name="Camp6" type="Marker2D" parent="Camps"]
+position = Vector2(2450, 1750)
+gizmo_extents = 50.0
+
+[node name="Camp7" type="Marker2D" parent="Camps"]
+position = Vector2(950, 2250)
+gizmo_extents = 50.0
+
+[node name="Camp8" type="Marker2D" parent="Camps"]
+position = Vector2(2250, 950)
+gizmo_extents = 50.0
+
+[node name="Camp9" type="Marker2D" parent="Camps"]
+position = Vector2(2100, 4500)
+gizmo_extents = 70.0
+
+[node name="Camp10" type="Marker2D" parent="Camps"]
+position = Vector2(4500, 2100)
+gizmo_extents = 70.0
+
 [node name="DawnFountain" type="Marker2D" parent="."]
 position = Vector2(250, 4850)
 gizmo_extents = 60.0

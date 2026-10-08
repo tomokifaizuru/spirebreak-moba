@@ -3,6 +3,7 @@ extends SceneTree
 ##   godot --path . --resolution 1600x740 -s tools/shots.gd -- shot=teamfight out=/tmp/a.png
 ## shot = title | heroselect (pick=<hero id>) | early (at=<seconds>) | teamfight | tower | hud | victory
 ##        | shop | teamicons (2+ heroes dead) | camdrag (real touch-drag through the HUD)
+##        | scoreboard (tab=1 for the build tab) | recommend (popup at base) | jungle (a hero farming a camp)
 var opts := {"shot": "title", "out": "/tmp/shot.png", "seed": "3", "tries": "5"}
 var arena: Arena
 var frames := 0
@@ -123,6 +124,44 @@ func _process(_d: float) -> bool:
 						cv.shop.selected = it
 				phase = 2
 				wait = 25
+		"scoreboard":
+			if phase == 1 and arena.time > float(opts.get("at", "300")):
+				arena.sim_substeps = 1
+				var cvb: HudCanvas = arena.hud.canvas
+				cvb.board.tab = int(opts.get("tab", "0"))
+				cvb.toggle_board()
+				phase = 2
+				wait = 20
+		"recommend":
+			if phase == 1 and arena.time > 75.0 and p.alive:
+				arena.sim_substeps = 1
+				p.autopilot = false
+				p.command_stop()
+				p.position = p.fountain + Vector2(160, -80)
+				p.items.clear()
+				p.items_changed()
+				var cvr: HudCanvas = arena.hud.canvas
+				p.gold = 2000
+				var b0: BuildData = null
+				for b in arena.config.recommended_builds:
+					if b.hero == p.data:
+						b0 = b
+				Shop.buy(p, b0.items[0])
+				p.gold = Shop.price_for(p, b0.items[1]) + 35
+				cvr.rec_cd = 0.0
+				phase = 2
+				wait = 30
+		"jungle":
+			if phase == 1 and arena.time > 150.0:
+				for h in arena.heroes:
+					if h.alive and h.brain != null and h.brain.state == "jungle" and h.attack_target != null \
+							and h.attack_target.kind == Unit.Kind.NEUTRAL and h.position.distance_to(h.attack_target.position) < 200.0 \
+							and (arena.time > 400.0 or h.attack_target.max_hp > 800.0):
+						arena.sim_substeps = 1
+						arena.look_override = h.position.lerp(h.attack_target.position, 0.5) + Vector2(60, 30)
+						phase = 2
+						wait = 12
+						break
 		"teamicons":
 			if phase == 1 and arena.time > 100.0 and p.alive:
 				var dead := [0, 0]

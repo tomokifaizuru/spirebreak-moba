@@ -86,6 +86,7 @@ func _physics_process(_d: float) -> bool:
 		var wall := (Time.get_ticks_msec() - wall_start) / 1000.0
 		print("CASTS ", arena.cast_counts)
 		print("BUYS ", arena.buy_counts)
+		print("JUNGLE kills=%d-%d camps=%d" % [arena.jungle_kills[0], arena.jungle_kills[1], arena.camps.size()])
 		print("RESULT seed=%s winner=%s reason=\"%s\" time=%.0fs (%d:%02d) kills=%d-%d buildings_destroyed=%d-%d waves=%d max_creeps=%d old_creep_samples=%d stuck=%s wall=%.1fs" % [
 			opts["seed"], ("DAWN" if arena.winner == 0 else ("DUSK" if arena.winner == 1 else "NONE")), arena.end_reason, t, int(t) / 60, int(t) % 60,
 			arena.kills[0], arena.kills[1], arena.destroyed[0], arena.destroyed[1], arena.wave_count, max_creeps, old_creeps, str(stuck), wall])

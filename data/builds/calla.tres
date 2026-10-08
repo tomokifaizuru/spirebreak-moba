@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="BuildData" load_steps=9 format=3]
+
+[ext_resource type="Resource" path="res://data/heroes/calla.tres" id="1_xnqu8"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="2_dkxfh"]
+[ext_resource type="Resource" path="res://data/items/moonwell_pendant.tres" id="3_vkubi"]
+[ext_resource type="Resource" path="res://data/items/swift_boots.tres" id="4_jktsy"]
+[ext_resource type="Resource" path="res://data/items/sage_crown.tres" id="5_gm8fe"]
+[ext_resource type="Resource" path="res://data/items/oakheart_charm.tres" id="6_obp57"]
+[ext_resource type="Resource" path="res://data/items/gale_treads.tres" id="7_k78pi"]
+[ext_resource type="Script" path="res://scripts/data/build_data.gd" id="8_t4vv3"]
+
+[resource]
+script = ExtResource("8_t4vv3")
+hero = ExtResource("1_xnqu8")
+items = Array[ExtResource("2_dkxfh")]([ExtResource("3_vkubi"), ExtResource("4_jktsy"), ExtResource("5_gm8fe"), ExtResource("6_obp57"), ExtResource("7_k78pi")])

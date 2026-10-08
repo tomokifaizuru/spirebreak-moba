@@ -116,6 +116,11 @@ func _decide() -> void:
 		_use_wave_skills(c)
 		h.command_attack(c)
 		return
+	var camp := _pick_camp()
+	if camp != null:
+		state = "jungle"
+		h.command_attack(camp)
+		return
 	var s := a.attackable_structure_near(h, h.attack_range + (900.0 if pushing else 420.0))
 	if s != null and _structure_safe(s):
 		state = "push"
@@ -144,12 +149,17 @@ func _contains(root: ItemData, it: ItemData) -> bool:
 	return false
 
 
-## Next item in this hero's role build order (null = build finished / inventory full).
+## Next item: the hero's recommended build (data/builds) first, then the role build order.
 func next_item() -> ItemData:
 	var cat: ItemCatalog = hero.arena.config.item_catalog
 	if cat == null:
 		return null
-	for it in cat.build_for(hero.data.role):
+	var order: Array[ItemData] = []
+	for b in hero.arena.config.recommended_builds:
+		if b != null and b.hero == hero.data:
+			order.append_array(b.items)
+	order.append_array(cat.build_for(hero.data.role))
+	for it in order:
 		if it == null or _has_or_built(it):
 			continue
 		if Shop.block_reason(hero, it, false) == "Inventory full":
@@ -306,6 +316,43 @@ func _burst(t: Unit) -> float:
 		if hero.can_cast(i) and i < hero.data.abilities.size():
 			b += hero.data.abilities[i].dmg_at(hero.ranks[i])
 	return b * 100.0 / (100.0 + t.armor)
+
+
+## A jungle camp worth taking: the lane wave is not here, the camp is on our half (or the river
+## camps once we are pushing), and nothing dangerous is standing on it.
+func _pick_camp() -> Unit:
+	var h := hero
+	var a := _arena()
+	if h.data.role == 4:
+		return null  # the support stays with the team
+	var front: float = a.fronts[h.team]
+	var our_p := a.team_progress(h.team, h.position)
+	# Only wander off when the wave is pushed past us (or there is no wave yet).
+	if front >= 0.0 and front < our_p + 500.0:
+		return null
+	var best: Unit = null
+	var bd := INF
+	for u in a.neutrals:
+		if not u.alive:
+			continue
+		var d := h.position.distance_to(u.position)
+		if d > 1500.0 or d >= bd:
+			continue
+		var camp_p := a.team_progress(h.team, u.position)
+		# Stay on our side of the map unless we are already pushing their towers.
+		if camp_p > a.lane_len * 0.55 and not pushing:
+			continue
+		if a.enemy_tower_covering(h.team, u.position, 60.0) != null:
+			continue
+		if not a.heroes_near(u.position, 750.0, h.team, true).is_empty():
+			continue
+		if u.max_hp > 800.0 and (h.level < 5 or h.hp_frac() < 0.7):
+			continue  # the big camp needs a few levels
+		if u.target == null and h.hp_frac() < 0.55:
+			continue
+		bd = d
+		best = u
+	return best
 
 
 func _pick_creep() -> Unit:
