@@ -23,7 +23,7 @@ config/version="0.5"
 run/main_scene="res://scenes/title.tscn"
 config/features=PackedStringArray("4.5", "GL Compatibility")
 boot_splash/bg_color=Color(0.07, 0.08, 0.12, 1)
-config/icon="res://icon.svg"
+config/icon="res://assets/icon/icon-512.png"
 
 [autoload]
 
@@ -36,7 +36,7 @@ window/size/viewport_width=1136
 window/size/viewport_height=640
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
-window/handheld/orientation=0
+window/handheld/orientation=4
 
 [input]
 
@@ -56,6 +56,7 @@ common/physics_ticks_per_second=60
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 textures/canvas_textures/default_texture_filter=1
+textures/vram_compression/import_etc2_astc=true
 environment/defaults/default_clear_color=Color(0.07, 0.08, 0.12, 1)
 anti_aliasing/quality/msaa_2d=0
 '''

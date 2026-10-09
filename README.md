@@ -19,6 +19,36 @@ needs no special server headers.
 ![Scoreboard](preview-v0.4-scoreboard.png)
 ![Recommended item popup](preview-v0.4-recommend.png)
 
+## 📱 Install on Android
+
+**Download:** https://github.com/tomokifaizuru/spirebreak-moba/releases/download/v0.5-android/Spirebreak-v0.5.apk
+(release page: https://github.com/tomokifaizuru/spirebreak-moba/releases/tag/v0.5-android)
+
+1. Open the link on your phone and download `Spirebreak-v0.5.apk` (about 52 MB).
+2. Tap the downloaded file. If Android blocks it, allow your browser or Files app under
+   **Settings → Apps → Special app access → Install unknown apps**, then tap the file again.
+3. Google Play Protect may warn that the app is from an unknown developer. Choose **More details → Install anyway**.
+   The app asks for no permissions.
+4. Launch **Spirebreak** from the home screen. It runs fullscreen (immersive) in landscape and follows
+   the phone's rotation between the two landscape sides.
+
+- Needs Android 7.0+ (API 24) with OpenGL ES 3.0 and an ARM CPU (arm64-v8a or armeabi-v7a), which covers nearly all phones.
+- Settings (Music / SFX volume) are saved on the device. The match music loops natively.
+- **Updating:** a newer APK installs over this one only if it is signed with the same key. If you see
+  "App not installed" / a signature conflict, uninstall the old version first.
+- **Building the APK yourself:** Godot 4.5.1 with the Android export templates, JDK 17 and the Android
+  SDK (platform-tools, build-tools 35.0.0, platform 35) set in Editor Settings → Export → Android. Then
+  **Project → Export… → Android**. The preset uses the prebuilt template (no Gradle), the GL Compatibility
+  renderer, arm64-v8a + armeabi-v7a, package `com.tomokifaizuru.spirebreak` and version 0.5 (code 5).
+  The release keystore is **not** in this repo. Supply your own through the preset or the
+  `GODOT_ANDROID_KEYSTORE_RELEASE_*` environment variables.
+- **App icon:** the Dawn vs Dusk duel (Morrow vs Sable, rendered from the in-game models), in
+  `assets/icon/` (main + adaptive foreground/background/monochrome). Other drafts are in
+  `icon-drafts/` (see `icon-drafts/icons-sheet.png`). They are rebuilt by `tools/make_icons.gd` +
+  `tools/compose_icons.py`.
+
+![Icon options](icon-drafts/icons-sheet.png)
+
 ## What's new in v0.5
 
 - **Tower damage ramp vs heroes**: each tower shot in a row at the *same* hero does double the last one
@@ -265,6 +295,8 @@ godot --path . --resolution 1600x740 -s tools/shots.gd -- shot=shop out=/tmp/a.p
 
 ## Versions
 
+- **v0.5-android**: Android APK (sideload), new app icon made from the hero models, sensor-landscape
+  immersive fullscreen.
 - **v0.5**: tower shots on the same hero double (8× cap) with streak numbers; fountains shoot enemy
   heroes with visible bolts (bots avoid them); jungle gold +1/3 of base per minute; Kestrel +3.5% attack
   speed per level; light balance.

@@ -13,3 +13,11 @@ audio/music/*.f32
 audio/music/_render*
 audio/music/*.wav.import
 audio/music/*.mp4.import
+
+# Android signing secrets (never commit)
+android/*.keystore
+android/*.jks
+android/KEYSTORE-INFO.txt
+*.apk
+*.aab
+*.idsig
