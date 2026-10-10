@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="HeroData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ability_data.gd" id="1_ab"]
+[ext_resource type="Resource" path="res://data/abilities/brakka_tidal_cleave.tres" id="2_a0"]
+[ext_resource type="Resource" path="res://data/abilities/brakka_undertow_rush.tres" id="3_a1"]
+[ext_resource type="Resource" path="res://data/abilities/brakka_brine_guard.tres" id="4_a2"]
+[ext_resource type="Resource" path="res://data/abilities/brakka_maelstrom_slam.tres" id="5_a3"]
+[ext_resource type="Script" path="res://scripts/data/hero_data.gd" id="6_hd"]
+
+[resource]
+script = ExtResource("6_hd")
+id = &"brakka"
+display_name = "Brakka"
+title = "the Tide Brawler"
+role = 5
+tagline = "Anchor sailor: surge in and root the whole fight."
+difficulty = 1
+body_color = Color(0.2, 0.55, 0.62, 1)
+accent_color = Color(0.12, 0.2, 0.38, 1)
+detail_color = Color(0.95, 0.85, 0.45, 1)
+model_scale = 1.08
+max_hp = 840.0
+hp_per_level = 88.0
+hp_regen = 2.7
+max_mana = 300.0
+mana_per_level = 28.0
+mana_regen = 2.2
+armor = 13.0
+armor_per_level = 1.5
+move_speed = 305.0
+attack_damage = 53.0
+attack_damage_per_level = 4.0
+attack_range = 85.0
+attack_interval = 1.0
+ranged_attack = false
+projectile_speed = 0.0
+skill_priority = PackedInt32Array(0, 1, 2)
+abilities = Array[ExtResource("1_ab")]([ExtResource("2_a0"), ExtResource("3_a1"), ExtResource("4_a2"), ExtResource("5_a3")])

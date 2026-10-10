@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="HeroData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ability_data.gd" id="1_ab"]
+[ext_resource type="Resource" path="res://data/abilities/nova_scatter_shot.tres" id="2_a0"]
+[ext_resource type="Resource" path="res://data/abilities/nova_overdrive.tres" id="3_a1"]
+[ext_resource type="Resource" path="res://data/abilities/nova_concussive_round.tres" id="4_a2"]
+[ext_resource type="Resource" path="res://data/abilities/nova_comet_rail.tres" id="5_a3"]
+[ext_resource type="Script" path="res://scripts/data/hero_data.gd" id="6_hd"]
+
+[resource]
+script = ExtResource("6_hd")
+id = &"nova"
+display_name = "Nova"
+title = "the Starshot Gunner"
+role = 2
+tagline = "Star gunner: fan shots and a map-wide rail."
+difficulty = 2
+body_color = Color(0.85, 0.85, 0.95, 1)
+accent_color = Color(0.36, 0.25, 0.7, 1)
+detail_color = Color(1, 0.85, 0.3, 1)
+max_hp = 660.0
+hp_per_level = 74.0
+hp_regen = 1.8
+max_mana = 380.0
+mana_per_level = 34.0
+armor = 10.0
+armor_per_level = 1.1
+move_speed = 300.0
+attack_damage = 50.0
+attack_damage_per_level = 3.2
+attack_speed_per_level = 0.02
+attack_range = 580.0
+attack_interval = 0.88
+projectile_speed = 1300.0
+projectile_style = "orb"
+skill_priority = PackedInt32Array(0, 2, 1)
+bot_retreat_hp = 0.36
+abilities = Array[ExtResource("1_ab")]([ExtResource("2_a0"), ExtResource("3_a1"), ExtResource("4_a2"), ExtResource("5_a3")])

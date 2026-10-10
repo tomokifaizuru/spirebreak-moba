@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="MatchConfig" load_steps=22 format=3]
+[gd_resource type="Resource" script_class="MatchConfig" load_steps=26 format=3]
 
 [ext_resource type="Resource" path="res://data/units/camp_monster.tres" id="1_r4grl"]
 [ext_resource type="Resource" path="res://data/units/creep_melee.tres" id="2_ct44t"]
@@ -20,11 +20,15 @@
 [ext_resource type="Resource" path="res://data/builds/sable.tres" id="16_hu6tk"]
 [ext_resource type="Resource" path="res://data/builds/lumi.tres" id="17_d0w4c"]
 [ext_resource type="Resource" path="res://data/builds/kestrel.tres" id="18_klrmw"]
+[ext_resource type="Resource" path="res://data/heroes/brakka.tres" id="30_brk"]
+[ext_resource type="Resource" path="res://data/heroes/nova.tres" id="31_ves"]
+[ext_resource type="Resource" path="res://data/builds/brakka.tres" id="32_bbk"]
+[ext_resource type="Resource" path="res://data/builds/nova.tres" id="33_bvs"]
 [ext_resource type="Resource" path="res://data/builds/calla.tres" id="19_w0v3t"]
 
 [resource]
 script = ExtResource("12_hu6tk")
-roster = Array[ExtResource("5_2ytcg")]([ExtResource("6_jyvlq"), ExtResource("8_1n8kn"), ExtResource("9_8dgrk"), ExtResource("10_mi28r"), ExtResource("11_aq558"), ExtResource("7_knhds")])
+roster = Array[ExtResource("5_2ytcg")]([ExtResource("6_jyvlq"), ExtResource("8_1n8kn"), ExtResource("9_8dgrk"), ExtResource("10_mi28r"), ExtResource("11_aq558"), ExtResource("7_knhds"), ExtResource("30_brk"), ExtResource("31_ves")])
 player_hero = ExtResource("11_aq558")
 dawn_bots = Array[ExtResource("5_2ytcg")]([ExtResource("6_jyvlq"), ExtResource("7_knhds")])
 dusk_bots = Array[ExtResource("5_2ytcg")]([ExtResource("8_1n8kn"), ExtResource("9_8dgrk"), ExtResource("10_mi28r")])
@@ -38,4 +42,4 @@ starting_gold = 300
 gold_hero_kill = 120
 gold_assist = 40
 item_catalog = ExtResource("11_ct44t")
-recommended_builds = Array[ExtResource("13_8dgrk")]([ExtResource("14_mi28r"), ExtResource("15_aq558"), ExtResource("16_hu6tk"), ExtResource("17_d0w4c"), ExtResource("18_klrmw"), ExtResource("19_w0v3t")])
+recommended_builds = Array[ExtResource("13_8dgrk")]([ExtResource("14_mi28r"), ExtResource("15_aq558"), ExtResource("16_hu6tk"), ExtResource("17_d0w4c"), ExtResource("18_klrmw"), ExtResource("19_w0v3t"), ExtResource("32_bbk"), ExtResource("33_bvs")])

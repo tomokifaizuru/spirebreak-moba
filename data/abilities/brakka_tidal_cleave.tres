@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"tidal_cleave"
+display_name = "Tidal Cleave"
+description = "Anchor sweep in front of you; heals you for 25% of the damage dealt."
+icon = "quake"
+aim = "self"
+cooldown = 7.0
+cooldown_per_rank = -0.5
+mana_cost = 40.0
+damage = 68.0
+damage_per_rank = 30.0
+cast_range = 200.0
+radius = 200.0
+duration = 0.0
+value = 0.25
+value_per_rank = 0.04

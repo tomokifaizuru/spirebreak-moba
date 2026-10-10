@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="BuildData" load_steps=10 format=3]
+
+[ext_resource type="Resource" path="res://data/heroes/nova.tres" id="1_h"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="2_i"]
+[ext_resource type="Resource" path="res://data/items/quickstring_glove.tres" id="3_x"]
+[ext_resource type="Resource" path="res://data/items/swift_boots.tres" id="4_x"]
+[ext_resource type="Resource" path="res://data/items/leech_fang.tres" id="5_x"]
+[ext_resource type="Resource" path="res://data/items/crimson_quiver.tres" id="6_x"]
+[ext_resource type="Resource" path="res://data/items/gale_treads.tres" id="7_x"]
+[ext_resource type="Resource" path="res://data/items/storm_edge.tres" id="8_x"]
+[ext_resource type="Script" path="res://scripts/data/build_data.gd" id="99_b"]
+
+[resource]
+script = ExtResource("99_b")
+hero = ExtResource("1_h")
+items = Array[ExtResource("2_i")]([ExtResource("3_x"), ExtResource("4_x"), ExtResource("5_x"), ExtResource("6_x"), ExtResource("7_x"), ExtResource("8_x")])

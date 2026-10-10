@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="ItemCatalog" load_steps=18 format=3]
+[gd_resource type="Resource" script_class="ItemCatalog" load_steps=20 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/item_data.gd" id="1_s0cru"]
 [ext_resource type="Resource" path="res://data/items/swift_boots.tres" id="2_3hsj6"]
@@ -17,14 +17,16 @@
 [ext_resource type="Resource" path="res://data/items/sage_crown.tres" id="15_0on6y"]
 [ext_resource type="Resource" path="res://data/items/frenzy_gauntlets.tres" id="16_b7d3v"]
 [ext_resource type="Script" path="res://scripts/data/item_catalog.gd" id="17_fxc1e"]
+[ext_resource type="Resource" path="res://data/items/vampiric_grimoire.tres" id="18_vg"]
+[ext_resource type="Resource" path="res://data/items/crimson_quiver.tres" id="19_cq"]
 
 [resource]
 script = ExtResource("17_fxc1e")
 basic = Array[ExtResource("1_s0cru")]([ExtResource("2_3hsj6"), ExtResource("3_q3oin"), ExtResource("4_enmd0"), ExtResource("5_ud1ck"), ExtResource("6_du3vj"), ExtResource("7_s1jf3"), ExtResource("8_xscti"), ExtResource("9_wml6m")])
-upgraded = Array[ExtResource("1_s0cru")]([ExtResource("10_2bhyd"), ExtResource("11_u2arw"), ExtResource("16_b7d3v"), ExtResource("13_1mguq"), ExtResource("15_0on6y"), ExtResource("14_0vcg8"), ExtResource("12_g4h0i")])
+upgraded = Array[ExtResource("1_s0cru")]([ExtResource("10_2bhyd"), ExtResource("11_u2arw"), ExtResource("16_b7d3v"), ExtResource("13_1mguq"), ExtResource("15_0on6y"), ExtResource("14_0vcg8"), ExtResource("19_cq"), ExtResource("18_vg"), ExtResource("12_g4h0i")])
 build_tank = Array[ExtResource("1_s0cru")]([ExtResource("2_3hsj6"), ExtResource("5_ud1ck"), ExtResource("6_du3vj"), ExtResource("10_2bhyd"), ExtResource("13_1mguq"), ExtResource("9_wml6m"), ExtResource("12_g4h0i")])
 build_fighter = Array[ExtResource("1_s0cru")]([ExtResource("2_3hsj6"), ExtResource("5_ud1ck"), ExtResource("6_du3vj"), ExtResource("10_2bhyd"), ExtResource("13_1mguq"), ExtResource("8_xscti"), ExtResource("3_q3oin"), ExtResource("14_0vcg8")])
 build_assassin = Array[ExtResource("1_s0cru")]([ExtResource("3_q3oin"), ExtResource("2_3hsj6"), ExtResource("9_wml6m"), ExtResource("10_2bhyd"), ExtResource("4_enmd0"), ExtResource("11_u2arw"), ExtResource("12_g4h0i")])
 build_mage = Array[ExtResource("1_s0cru")]([ExtResource("7_s1jf3"), ExtResource("2_3hsj6"), ExtResource("15_0on6y"), ExtResource("10_2bhyd"), ExtResource("5_ud1ck"), ExtResource("9_wml6m"), ExtResource("12_g4h0i")])
-build_marksman = Array[ExtResource("1_s0cru")]([ExtResource("4_enmd0"), ExtResource("2_3hsj6"), ExtResource("3_q3oin"), ExtResource("11_u2arw"), ExtResource("10_2bhyd"), ExtResource("8_xscti"), ExtResource("16_b7d3v")])
+build_marksman = Array[ExtResource("1_s0cru")]([ExtResource("4_enmd0"), ExtResource("2_3hsj6"), ExtResource("3_q3oin"), ExtResource("11_u2arw"), ExtResource("10_2bhyd"), ExtResource("8_xscti"), ExtResource("19_cq"), ExtResource("16_b7d3v")])
 build_support = Array[ExtResource("1_s0cru")]([ExtResource("7_s1jf3"), ExtResource("2_3hsj6"), ExtResource("15_0on6y"), ExtResource("10_2bhyd"), ExtResource("5_ud1ck"), ExtResource("6_du3vj"), ExtResource("13_1mguq")])

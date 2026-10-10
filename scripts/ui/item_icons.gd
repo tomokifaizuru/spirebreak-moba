@@ -118,6 +118,19 @@ static func draw(ci: CanvasItem, icon: String, c: Vector2, s: float, col: Color,
 			ci.draw_line(c + Vector2(0.4, 0.15) * s, c + Vector2(0.4, 0.85) * s, Color(0.4, 0.25, 0.15, a), s * 0.2, true)
 			ci.draw_circle(c + Vector2(-0.3, -0.45) * s, s * 0.1, Color(0.2, 0.2, 0.25, a))
 			ci.draw_circle(c + Vector2(-0.35, 0.5) * s, s * 0.16, Color(col, a))
+		"tome":
+			_poly(ci, c, s, [Vector2(-0.7, -0.75), Vector2(0.6, -0.75), Vector2(0.6, 0.8), Vector2(-0.7, 0.8)], Color(col.darkened(0.3), a))
+			ci.draw_rect(Rect2(c + Vector2(0.45, -0.7) * s, Vector2(0.25, 1.45) * s), Color(0.95, 0.9, 0.8, a))
+			ci.draw_circle(c + Vector2(-0.05, -0.05) * s, s * 0.32, Color(col, a))
+			_poly(ci, c, s, [Vector2(-0.3, -0.1), Vector2(0.2, -0.1), Vector2(-0.05, 0.55)], Color(col, a), false)
+			ci.draw_circle(c + Vector2(-0.15, -0.15) * s, s * 0.08, Color(1, 1, 1, 0.7 * a))
+		"quiver":
+			_poly(ci, c, s, [Vector2(-0.35, -0.3), Vector2(0.35, -0.3), Vector2(0.25, 0.9), Vector2(-0.25, 0.9)], Color(0.45, 0.25, 0.15, a))
+			for i in 3:
+				var x := -0.22 + i * 0.22
+				ci.draw_line(c + Vector2(x, -0.3) * s, c + Vector2(x, -0.85) * s, Color(0.95, 0.95, 0.9, a), s * 0.07, true)
+				_poly(ci, c, s, [Vector2(x - 0.1, -0.85), Vector2(x + 0.1, -0.85), Vector2(x, -1.0)], Color(col, a), false)
+			ci.draw_circle(c + Vector2(0, 0.3) * s, s * 0.17, Color(col, a))
 		"blink":
 			ci.draw_arc(c, s * 0.8, 0, TAU, 28, Color(col, 0.6 * a), s * 0.08, true)
 			_sparkle(ci, c, s * 0.75, Color(col.lightened(0.3), a))

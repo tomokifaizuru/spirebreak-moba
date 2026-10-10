@@ -44,6 +44,13 @@ const ROLE_COLORS := [Color("5fbf6a"), Color("9a7bff"), Color("ffc44a"), Color("
 ## Extra attack speed per level above 1, as a fraction of base attack speed (0.035 = +3.5% per level).
 ## Adds to item attack speed.
 @export var attack_speed_per_level := 0.0
+## Extra attack damage per level above 1, as a fraction of base attack damage (0.035 = +3.5% per level).
+## Applied on top of attack_damage_per_level.
+@export var attack_damage_pct_per_level := 0.0
+## From this hero level on, all damage dealt to creeps (lane creeps and jungle monsters) is multiplied
+## by 1 + creep_damage_bonus. 0 = off.
+@export var creep_damage_bonus := 0.0
+@export var creep_bonus_level := 6
 ## Distance between the two units' edges. Melee heroes use ~70.
 @export var attack_range := 400.0
 ## Seconds between basic attacks.

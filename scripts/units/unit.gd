@@ -128,6 +128,8 @@ func take_damage(amount: float, source: Unit, true_damage := false, show_number 
 	if not alive or invulnerable or untargetable_t > 0.0 or amount <= 0.0:
 		return 0.0
 	var dmg := amount
+	if source != null and is_instance_valid(source) and source is Hero:
+		dmg *= source.damage_mult_vs(self)
 	if not true_damage:
 		dmg *= 100.0 / (100.0 + maxf(armor, -50.0))
 	if mark_t > 0.0:
@@ -143,6 +145,7 @@ func take_damage(amount: float, source: Unit, true_damage := false, show_number 
 	var src: Unit = source if (source != null and is_instance_valid(source)) else null
 	if src != null and src is Hero:
 		recent_attackers[src] = arena.time
+		src.on_dealt_damage(dealt)
 	if arena != null:
 		arena.on_damage(self, src, dealt, show_number)
 	_on_damaged(src, dealt)

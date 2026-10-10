@@ -162,6 +162,28 @@ static func draw_hero(ci: CanvasItem, id: StringName, c: Vector2, r: float, f :=
 			ci.draw_line(hm + Vector2(-r * 0.2, r * 0.9), hm, Color("7a5232", a), 3.0)
 			ci.draw_rect(Rect2(hm + Vector2(-r * 0.3, -r * 0.22), Vector2(r * 0.6, r * 0.36)), Color("8e95a6", a))
 			ci.draw_rect(Rect2(hm + Vector2(-r * 0.3, -r * 0.22), Vector2(r * 0.1, r * 0.36)), Color("ffcf4a", a))
+		&"brakka":
+			# Tide Brawler: navy coat, teal hair, white sailor cap.
+			ci.draw_circle(c, r, Color("1f3361", a))
+			var hb6 := c + lean * 1.5
+			ci.draw_circle(hb6, r * 0.62, Color("338c9e", a))
+			ci.draw_circle(hb6 + Vector2(0, r * 0.1), r * 0.45, Color("ffd9bd", a))
+			ci.draw_circle(hb6 + Vector2(-r * 0.17, r * 0.08), r * 0.07, Color(0.1, 0.1, 0.15, a))
+			ci.draw_circle(hb6 + Vector2(r * 0.17, r * 0.08), r * 0.07, Color(0.1, 0.1, 0.15, a))
+			ci.draw_colored_polygon(ellipse_pts(hb6 + Vector2(0, -r * 0.42), r * 0.5, r * 0.18), Color("f4f1e8", a))
+			ci.draw_line(c + Vector2(r * 0.9, -r * 0.6), c + Vector2(r * 0.9, r * 0.6), Color("5f6b78", a), 4.0)
+			ci.draw_arc(c + Vector2(r * 0.9, r * 0.35), r * 0.35, 0.2, PI - 0.2, 10, Color("5f6b78", a), 4.0)
+		&"nova":
+			# Starshot Gunner: violet coat, silver hair, hat with gold star, rifle.
+			ci.draw_circle(c, r, Color("5c40b3", a))
+			var hv := c + lean * 1.5
+			ci.draw_circle(hv, r * 0.6, Color("d9d9f2", a))
+			ci.draw_circle(hv + Vector2(0, r * 0.1), r * 0.44, Color("ffd9bd", a))
+			ci.draw_circle(hv + Vector2(-r * 0.17, r * 0.1), r * 0.07, Color(0.1, 0.1, 0.2, a))
+			ci.draw_circle(hv + Vector2(r * 0.17, r * 0.1), r * 0.08, Color("8fd0ff", a))
+			ci.draw_colored_polygon(ellipse_pts(hv + Vector2(0, -r * 0.42), r * 0.66, r * 0.2), Color("3e2a80", a))
+			ci.draw_colored_polygon(star_pts(hv + Vector2(0, -r * 0.5), r * 0.16, r * 0.07), Color("ffd84a", a))
+			ci.draw_line(c + Vector2(r * 0.7, r * 0.5), c + Vector2(r * 1.2, -r * 0.6), Color("8a8ea0", a), 4.0)
 		_:
 			ci.draw_circle(c, r, Color(0.8, 0.8, 0.8, a))
 	outline_circle(ci, c, r, Color(0.07, 0.08, 0.1, 0.9 * a), 2.0)

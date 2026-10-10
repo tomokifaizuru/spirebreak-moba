@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"concussive_round"
+display_name = "Recoil Round"
+description = "A heavy shot at one enemy (damage + 40% slow for 1.5 s) whose recoil hops you backwards."
+icon = "mark"
+aim = "target"
+cooldown = 10.0
+cooldown_per_rank = -0.75
+mana_cost = 50.0
+damage = 70.0
+damage_per_rank = 30.0
+cast_range = 650.0
+radius = 0.0
+duration = 1.5
+value = 0.4
+value_per_rank = 0.03
+projectile_speed = 1400.0
+value2 = 240.0

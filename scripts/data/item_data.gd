@@ -33,6 +33,8 @@ extends Resource
 @export_range(0.0, 0.5) var cooldown_reduction := 0.0
 ## Fraction of basic-attack damage healed back (works for ranged attacks too).
 @export_range(0.0, 1.0) var lifesteal := 0.0
+## Fraction of skill damage (everything except basic attacks) healed back.
+@export_range(0.0, 1.0) var spell_vamp := 0.0
 
 @export_group("Active")
 ## "none" = passive item, "blink" = short-range teleport (item button in the HUD).
@@ -74,6 +76,8 @@ func stat_lines() -> PackedStringArray:
 		out.append("-%d%% skill cooldowns" % roundi(cooldown_reduction * 100.0))
 	if lifesteal != 0.0:
 		out.append("%d%% lifesteal" % roundi(lifesteal * 100.0))
+	if spell_vamp != 0.0:
+		out.append("%d%% spell vamp" % roundi(spell_vamp * 100.0))
 	if active == "blink":
 		out.append("Active: blink %.1f m (%ds cd)" % [active_range / 100.0, int(active_cooldown)])
 	return out

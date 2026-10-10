@@ -1,4 +1,4 @@
-# Spirebreak (v0.5)
+# Spirebreak (v0.6)
 
 An original **3v3 one-lane mobile MOBA** prototype made with **Godot 4.5.1** (GL Compatibility).
 Low-poly chibi 3D, 6 heroes with roles, a shop with combining items, a scoreboard, recommended builds and
@@ -21,10 +21,10 @@ needs no special server headers.
 
 ## 📱 Install on Android
 
-**Download:** https://github.com/tomokifaizuru/spirebreak-moba/releases/download/v0.5-android/Spirebreak-v0.5.apk
-(release page: https://github.com/tomokifaizuru/spirebreak-moba/releases/tag/v0.5-android)
+**Download:** https://github.com/tomokifaizuru/spirebreak-moba/releases/download/v0.6-android/Spirebreak-v0.6.apk
+(release page: https://github.com/tomokifaizuru/spirebreak-moba/releases/tag/v0.6-android)
 
-1. Open the link on your phone and download `Spirebreak-v0.5.apk` (about 52 MB).
+1. Open the link on your phone and download `Spirebreak-v0.6.apk` (about 52 MB).
 2. Tap the downloaded file. If Android blocks it, allow your browser or Files app under
    **Settings → Apps → Special app access → Install unknown apps**, then tap the file again.
 3. Google Play Protect may warn that the app is from an unknown developer. Choose **More details → Install anyway**.
@@ -48,6 +48,29 @@ needs no special server headers.
   `tools/compose_icons.py`.
 
 ![Icon options](icon-drafts/icons-sheet.png)
+
+## What's new in v0.6
+
+![Picture How to Play](preview-v0.6-howto.png)
+![8 heroes](preview-v0.6-heroes.png)
+![Lifesteal items](preview-v0.6-shop.png)
+
+- **Picture-book How to Play**: 5 swipeable cards (Goal, Phone Controls, Watch Out!, Gold & Levels, Shop)
+  with drawings, short captions and big Back / Next buttons, plus an optional PC-keys card.
+- **New heroes** (8 total, 4-column hero select):
+  - **Brakka, the Tide Brawler** (Fighter, melee): Tidal Cleave (sweep, heals 25% of damage), Undertow Rush
+    (dash through enemies, slow), Brine Guard (15% max-HP shield + 20% haste), ult **Maelstrom Slam**
+    (wind-up whirlpool around you: damage + 1.3/1.5/1.7 s root).
+  - **Nova, the Starshot Gunner** (Marksman, ranged): Scatter Shot (3-bolt fan), Overdrive (+35% attack speed,
+    +20% move speed, 4 s), Recoil Round (target shot + 40% slow, recoil hops you back), ult **Comet Rail**
+    (13 m piercing rail shot).
+- **Kestrel**: +3.5% attack damage per level (on top of +3.5% attack speed per level) and +15% damage to
+  creeps and jungle monsters from level 6.
+- **Lifesteal items**: new **Crimson Quiver** (Leech Fang + Quickstring Glove + 450: +10 dmg, +28% AS,
+  16% lifesteal) and **Vampiric Grimoire** (Leech Fang + Moonwell Pendant + 400: +200 mana, +2 mana regen,
+  -8% cooldowns, 8% lifesteal, **18% spell vamp** = skills heal you). Existing: Leech Fang (12%),
+  Bloodfang Cleaver (20%).
+- Bot lineups now pick 2 allies + 3 enemies from the full 8-hero pool.
 
 ## What's new in v0.5
 

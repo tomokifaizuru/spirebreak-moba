@@ -124,7 +124,7 @@ func _build_ui() -> void:
 		Game.goto_title())
 	ui.add_child(back)
 	var grid := GridContainer.new()
-	grid.columns = 3
+	grid.columns = 3 if roster.size() <= 6 else 4
 	grid.add_theme_constant_override("h_separation", 12)
 	grid.add_theme_constant_override("v_separation", 12)
 	grid.position = Vector2(22, 92)
@@ -137,7 +137,7 @@ func _build_ui() -> void:
 		var c := HeroCard.new()
 		c.data = d
 		c.tex = tex
-		c.custom_minimum_size = Vector2(196, 258)
+		c.custom_minimum_size = Vector2(196, 258) if roster.size() <= 6 else Vector2(150, 258)
 		c.tapped.connect(_select.bind(true))
 		grid.add_child(c)
 		cards.append(c)

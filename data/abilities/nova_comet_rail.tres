@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"comet_rail"
+display_name = "Comet Rail"
+description = "Charge and fire a huge rail shot across the map that pierces every enemy in its path."
+icon = "volley"
+is_ultimate = true
+aim = "line"
+cooldown = 60.0
+cooldown_per_rank = -8.0
+mana_cost = 110.0
+damage = 210.0
+damage_per_rank = 105.0
+cast_range = 1300.0
+radius = 48.0
+duration = 0.0
+projectile_speed = 2400.0

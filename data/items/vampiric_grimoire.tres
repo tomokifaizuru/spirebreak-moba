@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=4 format=3]
+
+[ext_resource type="Resource" path="res://data/items/leech_fang.tres" id="1_lf"]
+[ext_resource type="Resource" path="res://data/items/moonwell_pendant.tres" id="2_mp"]
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="3_it"]
+
+[resource]
+script = ExtResource("3_it")
+id = &"vampiric_grimoire"
+display_name = "Vampiric Grimoire"
+description = "Skills heal you (spell vamp) and attacks still leech."
+icon = "tome"
+color = Color(0.72, 0.2, 0.55, 1)
+tier = 2
+cost = 400
+components = Array[Resource]([ExtResource("1_lf"), ExtResource("2_mp")])
+bonus_mana = 200.0
+bonus_mana_regen = 2.0
+cooldown_reduction = 0.08
+lifesteal = 0.08
+spell_vamp = 0.18

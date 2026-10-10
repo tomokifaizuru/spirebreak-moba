@@ -64,6 +64,10 @@ func _process(_d: float) -> bool:
 		return false
 	if phase == 9:
 		wait -= 1
+		if wait == 20 and opts.has("howto"):
+			var hp = current_scene.how_panel
+			hp.open()
+			hp.go(int(opts["howto"]))
 		if wait <= 0:
 			_capture()
 		return false
@@ -123,7 +127,7 @@ func _process(_d: float) -> bool:
 				var cv: HudCanvas = arena.hud.canvas
 				cv.shop.open()
 				for it in cat.upgraded:
-					if it.id == &"storm_edge":
+					if String(it.id) == opts.get("sel", "storm_edge"):
 						cv.shop.selected = it
 				phase = 2
 				wait = 25

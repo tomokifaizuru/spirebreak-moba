@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"maelstrom_slam"
+display_name = "Maelstrom Slam"
+description = "Slam the anchor down: after a short wind-up, a whirlpool around you damages and roots enemies."
+icon = "roar"
+is_ultimate = true
+aim = "self"
+cooldown = 55.0
+cooldown_per_rank = -7.0
+mana_cost = 100.0
+damage = 150.0
+damage_per_rank = 80.0
+cast_range = 250.0
+radius = 270.0
+duration = 1.3
+value = 1.3
+value_per_rank = 0.2
+delay = 0.55

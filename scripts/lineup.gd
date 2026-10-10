@@ -20,20 +20,23 @@ static func build(player: HeroData, roster: Array, rng: RandomNumberGenerator) -
 	var best_score := -INF
 	var best: Array = []
 	var n := others.size()
+	var team_n := 3
 	for i in n:
 		for j in range(i + 1, n):
 			var allies: Array = [player, others[i], others[j]]
-			var enemies: Array = []
+			var rest: Array = []
 			for k in n:
 				if k != i and k != j:
-					enemies.append(others[k])
-			var a := team_score(allies)
-			var b := team_score(enemies)
-			# Fair first (weakest team as good as possible), then balanced, then a little randomness.
-			var score := minf(a, b) * 10.0 - absf(a - b) * 2.0 + rng.randf() * 3.0
-			if score > best_score:
-				best_score = score
-				best = [allies, enemies]
+					rest.append(others[k])
+			# Every 3-hero enemy team from the remaining heroes (all of them when only 3 are left).
+			for enemies in _combos(rest, mini(team_n, rest.size())):
+				var a := team_score(allies)
+				var b := team_score(enemies)
+				# Fair first (weakest team as good as possible), then balanced, then a little randomness.
+				var score := minf(a, b) * 10.0 - absf(a - b) * 2.0 + rng.randf() * 3.0
+				if score > best_score:
+					best_score = score
+					best = [allies, enemies]
 	var dawn: Array[HeroData] = []
 	var dusk: Array[HeroData] = []
 	if best.is_empty():
@@ -68,3 +71,14 @@ static func team_score(team: Array) -> float:
 	if ranged == team.size():
 		s -= 1.0
 	return s
+
+
+static func _combos(arr: Array, k: int) -> Array:
+	var out: Array = []
+	if k <= 0:
+		out.append([])
+		return out
+	for i in range(arr.size() - k + 1):
+		for rest in _combos(arr.slice(i + 1), k - 1):
+			out.append([arr[i]] + rest)
+	return out

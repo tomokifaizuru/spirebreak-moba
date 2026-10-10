@@ -62,6 +62,9 @@ var item_cd := 0.0
 ## From items: skill cooldown reduction (capped at 40%) and basic-attack lifesteal.
 var cdr := 0.0
 var item_lifesteal := 0.0
+var item_spell_vamp := 0.0
+## True while a basic attack is landing (so spell vamp skips it).
+var basic_hit := false
 var distance_moved := 0.0
 var font: Font
 
@@ -98,13 +101,14 @@ func _recalc_stats() -> void:
 	hp_regen = data.hp_regen * (1.0 + 0.08 * l)
 	mana_regen = data.mana_regen * (1.0 + 0.08 * l)
 	armor = data.armor + data.armor_per_level * l
-	attack_damage = data.attack_damage + data.attack_damage_per_level * l
+	attack_damage = (data.attack_damage + data.attack_damage_per_level * l) * (1.0 + data.attack_damage_pct_per_level * l)
 	attack_range = data.attack_range
 	attack_interval = data.attack_interval * pow(0.98, l)
 	move_speed = data.move_speed
 	var aspd := data.attack_speed_per_level * l
 	cdr = 0.0
 	item_lifesteal = 0.0
+	item_spell_vamp = 0.0
 	for it in items:
 		max_hp += it.bonus_hp
 		max_mana += it.bonus_mana
@@ -116,6 +120,7 @@ func _recalc_stats() -> void:
 		aspd += it.bonus_attack_speed
 		cdr += it.cooldown_reduction
 		item_lifesteal += it.lifesteal
+		item_spell_vamp += it.spell_vamp
 	attack_interval /= 1.0 + aspd
 	cdr = minf(cdr, 0.4)
 
@@ -452,13 +457,14 @@ func _do_attack(t: Unit) -> void:
 		big = true
 	if data.ranged_attack:
 		var p := arena.spawn_homing(self, t, dmg, data.projectile_speed, data.projectile_style, facing * radius)
-		if item_lifesteal > 0.0:
-			p.on_hit = _lifesteal_hit
+		p.on_hit = _lifesteal_hit
 		if big:
 			p.style = "bolt"
 		arena.sfx_at("shoot", position, -4.0)
 	else:
+		basic_hit = true
 		var dealt := t.take_damage(dmg, self)
+		basic_hit = false
 		if frenzy_t > 0.0 and lifesteal > 0.0 and dealt > 0.0:
 			heal(dealt * lifesteal)
 		if item_lifesteal > 0.0 and dealt > 0.0:
@@ -468,9 +474,25 @@ func _do_attack(t: Unit) -> void:
 
 
 func _lifesteal_hit(u: Unit, p: Projectile) -> void:
+	basic_hit = true
 	var dealt := u.take_damage(p.damage, self, false, true)
-	if dealt > 0.0 and alive:
+	basic_hit = false
+	if dealt > 0.0 and alive and item_lifesteal > 0.0:
 		heal(dealt * item_lifesteal)
+
+
+## Outgoing damage multiplier vs `target` (Kestrel's creep bonus from level 6).
+func damage_mult_vs(target: Unit) -> float:
+	if data.creep_damage_bonus > 0.0 and level >= data.creep_bonus_level \
+			and (target.kind == Kind.CREEP or target.kind == Kind.NEUTRAL):
+		return 1.0 + data.creep_damage_bonus
+	return 1.0
+
+
+## Called by Unit.take_damage after damage landed: spell vamp heals from non-basic-attack damage.
+func on_dealt_damage(dealt: float) -> void:
+	if item_spell_vamp > 0.0 and not basic_hit and dealt > 0.0 and alive:
+		heal(dealt * item_spell_vamp)
 
 
 func respawn() -> void:
@@ -851,6 +873,61 @@ func _do_ability(ab: AbilityData, r: int, a: Dictionary, slot: int) -> bool:
 			lifesteal = ab.value2
 			attack_cd = minf(attack_cd, 0.1)
 			arena.fx_ring(position, radius, radius + 50.0, Color(1.0, 0.55, 0.25), 0.4, 6.0)
+		# ---- Brakka, the Tide Brawler ----
+		&"tidal_cleave":
+			_slash(dir, ab.radius, dmg, ab.val_at(r), Color(0.45, 0.85, 1.0))
+			arena.fx_ring(position + dir * 60.0, 20.0, ab.radius * 0.8, Color(0.5, 0.85, 1.0), 0.3, 6.0)
+			arena.sfx_at("hit", position, -2.0)
+		&"undertow_rush":
+			if root_t > 0.0:
+				return false
+			var slow4 := ab.val_at(r)
+			var slow4_t := ab.duration
+			var rush_hit := func(u: Unit) -> void:
+				u.take_damage(dmg, self)
+				u.apply_slow(slow4, slow4_t)
+				arena.fx_ring(u.position, 10.0, 60.0, Color(0.5, 0.85, 1.0))
+			_start_dash(_mobility_dir(a), ab.cast_range, ab.projectile_speed, {"width": ab.radius, "on_hit": rush_hit})
+		&"brine_guard":
+			add_shield(max_hp * ab.val_at(r), ab.duration)
+			haste_t = maxf(haste_t, ab.duration)
+			haste_amt = maxf(haste_amt if haste_t > 0.0 else 0.0, ab.value2)
+			arena.fx_ring(position, radius, radius + 40.0, Color(0.45, 0.8, 1.0), 0.5, 6.0)
+		&"maelstrom_slam":
+			var f2 := arena.spawn_area(self, "snare", position, ab.radius, {"delay": ab.delay, "dmg": dmg, "root": ab.val_at(r)})
+			f2.follow = self
+			arena.fx_ring(position, 20.0, ab.radius, Color(0.4, 0.75, 1.0), 0.5, 8.0)
+		# ---- Nova, the Starshot Gunner ----
+		&"scatter_shot":
+			for k in [-1, 0, 1]:
+				var d2 := dir.rotated(ab.value * k)
+				arena.spawn_line(self, position + d2 * radius, d2, ab.cast_range, ab.projectile_speed, ab.radius, dmg, "bolt", false)
+			arena.sfx_at("shoot", position, -2.0)
+		&"overdrive":
+			frenzy_t = ab.duration
+			frenzy_as = ab.val_at(r)
+			lifesteal = 0.0
+			haste_t = maxf(haste_t, ab.duration)
+			haste_amt = maxf(haste_amt if haste_t > 0.0 else 0.0, ab.value2)
+			attack_cd = minf(attack_cd, 0.1)
+			arena.fx_ring(position, radius, radius + 50.0, Color(1.0, 0.85, 0.3), 0.4, 6.0)
+		&"concussive_round":
+			if tgt == null or position.distance_to(tgt.position) > ab.cast_range + tgt.radius + 40.0:
+				return false
+			var slow5 := ab.val_at(r)
+			var slow5_t := ab.duration
+			var conc_hit := func(u: Unit, _p: Projectile) -> void:
+				u.take_damage(dmg, self)
+				u.apply_slow(slow5, slow5_t)
+			var aim_d := (tgt.position - position).normalized()
+			arena.spawn_homing(self, tgt, dmg, ab.projectile_speed, "bolt", aim_d * radius, conc_hit)
+			if root_t <= 0.0 and ab.value2 > 0.0:
+				_start_dash(-aim_d, ab.value2, 1100.0, {})
+				facing = aim_d
+		&"comet_rail":
+			arena.spawn_line(self, position + dir * radius, dir, ab.cast_range, ab.projectile_speed, ab.radius, dmg, "bolt", true)
+			arena.fx_beam(position, position + dir * ab.cast_range, Color(1.0, 0.9, 0.5), 6.0)
+			arena.sfx_at("boom", position, -4.0)
 		_:
 			push_warning("Unknown ability id: %s" % ab.id)
 			return false
@@ -995,10 +1072,10 @@ func _draw_aim() -> void:
 			var p := d * ab.cast_range * clampf(mag, 0.12, 1.0)
 			draw_circle(p, ab.radius, Color(col, 0.18))
 			draw_arc(p, ab.radius, 0, TAU, 48, col, 3.0, true)
-		&"rootcall_roar", &"hundred_petals", &"barkskin", &"smoke_veil":
+		&"rootcall_roar", &"hundred_petals", &"barkskin", &"smoke_veil", &"maelstrom_slam", &"brine_guard", &"overdrive", &"tidal_cleave":
 			draw_circle(Vector2.ZERO, ab.radius if ab.radius > 0.0 else radius + 20.0, Color(col, 0.15))
 		_:
-			var w := maxf(ab.radius, 22.0) if ab.id == &"piercing_bolt" or ab.id == &"landslide" else 22.0
+			var w := maxf(ab.radius, 22.0) if ab.id in [&"piercing_bolt", &"landslide", &"comet_rail", &"undertow_rush"] else 22.0
 			var e := d * ab.cast_range
 			draw_line(d * radius, e, Color(col, 0.25), w * 2.0)
 			draw_line(d * radius, e, col, 3.0)

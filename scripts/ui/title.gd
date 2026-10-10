@@ -40,7 +40,7 @@ func _ready() -> void:
 	var how := MatchHud.make_button("How to Play", Color("3d4a6b"), 154.0)
 	how.pressed.connect(func() -> void:
 		Sfx.play("click", -6.0)
-		how_panel.visible = true)
+		(how_panel as HowToPlay).open())
 	how.add_theme_font_size_override("font_size", 22)
 	row.add_child(how)
 	var opt := MatchHud.make_button("Options", Color("3d4a6b"), 154.0)
@@ -62,47 +62,9 @@ func _ready() -> void:
 
 
 func _build_how() -> void:
-	how_panel = Control.new()
-	how_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	how_panel = HowToPlay.new()
 	how_panel.visible = false
 	add_child(how_panel)
-	var dim := ColorRect.new()
-	dim.color = Color(0.03, 0.04, 0.07, 0.85)
-	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	how_panel.add_child(dim)
-	var cc := CenterContainer.new()
-	cc.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	how_panel.add_child(cc)
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 8)
-	cc.add_child(box)
-	box.add_child(MatchHud.make_label("How to Play", 40, Art.GOLD))
-	var lines := [
-		"Destroy the enemy Heartspire. Towers fall in order: Outer, Inner, then the Heartspire.",
-		"Push with your creep waves: buildings take half damage when no allied creeps are near.",
-		"Towers hit heroes harder each shot in a row (x2, x4, x8). Don't dive alone, and never the enemy fountain.",
-		"Last-hit creeps for gold, stay near kills for XP. Ultimate unlocks at level 4 (max level 12).",
-		"Jungle camps give gold/XP that grows every minute (small camps respawn in 60 s, big Brambleback in 90 s).",
-		"",
-		"PHONE:  left thumb = joystick anywhere on the left half",
-		"ATTACK = auto-targets (hold to keep attacking)  ·  skills: tap = auto-aim, drag = aim, drag back = cancel",
-		"Minimap: hold to look around  ·  drag empty screen (right side) to pan  ·  CENTER = back to hero",
-		"SHOP (at base): items combine into upgrades  ·  gold popup = next recommended item  ·  purple = Blink",
-		"Tap the score/timer (or SCORE) for the scoreboard: K/D/A, gold, items and your recommended build",
-		"RECALL = go home  ·  HEAL = instant heal (60 s)  ·  top bar: grey icon = dead + respawn timer",
-		"",
-		"PC:  WASD / arrows move  ·  Space or J attack  ·  1 2 3 (or Q E F) skills  ·  R or 4 ultimate",
-		"Tab shop  ·  O scoreboard  ·  G blink  ·  B recall  ·  H heal  ·  Esc pause  ·  right-click to walk",
-		"Right/middle-drag or screen edges pan the camera  ·  C center  ·  skills aim at the mouse",
-	]
-	for l in lines:
-		var lab := MatchHud.make_label(l, 18, Color(1, 1, 1, 0.9))
-		box.add_child(lab)
-	var close := MatchHud.make_button("Got it", Color("2f9d5a"), 220.0)
-	close.pressed.connect(func() -> void: how_panel.visible = false)
-	var row := CenterContainer.new()
-	row.add_child(close)
-	box.add_child(row)
 
 
 func _on_play() -> void:

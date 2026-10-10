@@ -43,7 +43,7 @@ func build(d: HeroData, team_id: int) -> HeroModel:
 	var acc := d.accent_color
 	var det := d.detail_color
 	var robe := id == &"lumi" or id == &"calla"
-	attack_style = "bow" if id == &"kestrel" else ("staff" if id in [&"lumi", &"calla"] else "swing")
+	attack_style = "bow" if id in [&"kestrel", &"nova"] else ("staff" if id in [&"lumi", &"calla"] else "swing")
 	hip = Node3D.new()
 	hip.position = Vector3(0, 0.2, 0)
 	add_child(hip)
@@ -93,6 +93,18 @@ func build(d: HeroData, team_id: int) -> HeroModel:
 			bb.add(MeshKit.box(0.26, 0.28, 0.03), acc.darkened(0.2), MeshKit.xf(Vector3(0, 0.1, -0.16), Vector3(-8, 0, 0)))
 		&"lumi":
 			bb.add(MeshKit.cyl(0.13, 0.13, 0.05, 8), det, MeshKit.xf(Vector3(0, 0.22, 0)))
+		&"brakka":
+			# sailor collar + rope belt + life-ring on the back
+			bb.add(MeshKit.box(0.3, 0.04, 0.18), acc, MeshKit.xf(Vector3(0, 0.25, -0.03)))
+			bb.add(MeshKit.box(0.04, 0.1, 0.02), det, MeshKit.xf(Vector3(0, 0.2, 0.16)))
+			bb.add(MeshKit.cyl(0.17, 0.17, 0.035, 8), Color("e8d9a8"), MeshKit.xf(Vector3(0, -0.02, 0)))
+			bb.add(MeshKit.cyl(0.15, 0.15, 0.06, 10), Color("f05a3c"), MeshKit.xf(Vector3(0, 0.12, -0.18), Vector3(90, 0, 0)))
+			bb.add(MeshKit.cyl(0.08, 0.08, 0.065, 10), acc, MeshKit.xf(Vector3(0, 0.12, -0.185), Vector3(90, 0, 0)))
+		&"nova":
+			# long coat tails + star brooch + shoulder cape
+			bb.add(MeshKit.box(0.26, 0.2, 0.03), acc, MeshKit.xf(Vector3(0, -0.08, -0.15), Vector3(12, 0, 0)))
+			bb.add(MeshKit.cyl(0.15, 0.18, 0.07, 8), acc, MeshKit.xf(Vector3(0, 0.25, 0)))
+			bb.octa(Vector3(0.07, 0.16, 0.16), 0.035, 0.04, 0.02, det)
 	body = _mesh(hip, bb)
 	# ---------- head ----------
 	head = _pivot(hip, Vector3(0, 0.47, 0))
@@ -140,6 +152,23 @@ func build(d: HeroData, team_id: int) -> HeroModel:
 			hb.add(MeshKit.box(0.05, 0.02, 0.01), det, MeshKit.xf(Vector3(-0.07, 0.0, 0.228)))
 			hb.add(MeshKit.box(0.05, 0.02, 0.01), det, MeshKit.xf(Vector3(0.07, 0.0, 0.228)))
 			hb.add(MeshKit.sphere(0.07, 6, 4), acc, MeshKit.xf(Vector3(0, 0.27, -0.04), Vector3.ZERO, Vector3(0.6, 1.0, 3.2)))
+	match id:
+		&"brakka":
+			# teal shaggy hair, sailor cap, beard stubble
+			hb.add(MeshKit.sphere(0.225, 9, 6), hair, MeshKit.xf(Vector3(0, 0.03, -0.05)))
+			hb.add(MeshKit.cyl(0.2, 0.22, 0.09, 10), Color("f4f1e8"), MeshKit.xf(Vector3(0, 0.19, 0)))
+			hb.add(MeshKit.cyl(0.23, 0.23, 0.025, 10), acc, MeshKit.xf(Vector3(0, 0.15, 0)))
+			hb.add(MeshKit.box(0.16, 0.02, 0.09), acc, MeshKit.xf(Vector3(0, 0.15, 0.2)))
+			hb.add(MeshKit.box(0.2, 0.06, 0.04), hair.darkened(0.25), MeshKit.xf(Vector3(0, -0.12, 0.17)))
+			hb.add(MeshKit.box(0.08, 0.025, 0.01), Color("1d1a24"), MeshKit.xf(Vector3(-0.075, 0.05, 0.205), Vector3(0, 0, -10)))
+		&"nova":
+			# silver bob hair, tricorn-ish hat with star, monocle scope
+			hb.add(MeshKit.sphere(0.23, 9, 6), hair, MeshKit.xf(Vector3(0, 0.02, -0.04), Vector3.ZERO, Vector3(1.05, 1.0, 1.0)))
+			hb.add(MeshKit.cyl(0.3, 0.3, 0.03, 10), acc.darkened(0.2), MeshKit.xf(Vector3(0, 0.17, 0)))
+			hb.add(MeshKit.cyl(0.15, 0.19, 0.14, 8), acc.darkened(0.2), MeshKit.xf(Vector3(0, 0.25, -0.01)))
+			hb.octa(Vector3(0, 0.27, 0.17), 0.04, 0.05, 0.02, det)
+			hb.add(MeshKit.cyl(0.05, 0.05, 0.04, 8), det, MeshKit.xf(Vector3(0.075, -0.01, 0.2), Vector3(90, 0, 0)))
+			hb.add(MeshKit.cyl(0.034, 0.034, 0.045, 8), Color("8fd0ff"), MeshKit.xf(Vector3(0.075, -0.01, 0.205), Vector3(90, 0, 0)))
 	_mesh(head, hb)
 	# ---------- arms ----------
 	arm_l = _pivot(hip, Vector3(-0.185, 0.27, 0))
@@ -153,6 +182,7 @@ func build(d: HeroData, team_id: int) -> HeroModel:
 		ab.add(MeshKit.box(0.07, 0.18, 0.075), sleeve, MeshKit.xf(Vector3(0, -0.08, 0)))
 		ab.add(MeshKit.sphere(0.045, 6, 4), skin, MeshKit.xf(Vector3(0, -0.19, 0)))
 		_weapon(ab, right, acc, det, hair)
+		_weapon_v06(ab, right, acc, det)
 		_mesh(side, ab)
 	if id == &"lumi" or id == &"calla":
 		var glow := MeshKit.Builder.new(13)
@@ -202,6 +232,27 @@ func _weapon(ab: MeshKit.Builder, right: bool, acc: Color, det: Color, hair: Col
 				ab.add(MeshKit.box(0.24, 0.14, 0.14), ModelLib.STONE, MeshKit.xf(hand + Vector3(0, 0.42, 0.14), Vector3(15, 0, 0)))
 				ab.add(MeshKit.box(0.04, 0.15, 0.15), Art.GOLD, MeshKit.xf(hand + Vector3(0.08, 0.42, 0.14), Vector3(15, 0, 0)))
 				ab.add(MeshKit.box(0.04, 0.15, 0.15), Art.GOLD, MeshKit.xf(hand + Vector3(-0.08, 0.42, 0.14), Vector3(15, 0, 0)))
+
+
+func _weapon_v06(ab: MeshKit.Builder, right: bool, acc: Color, det: Color) -> void:
+	var hand := Vector3(0, -0.19, 0)
+	match id:
+		&"brakka":
+			if right:
+				# big ship anchor
+				ab.add(MeshKit.cyl(0.025, 0.025, 0.55, 6), Color("5f6b78"), MeshKit.xf(hand + Vector3(0, 0.12, 0.06), Vector3(15, 0, 0)))
+				ab.add(MeshKit.box(0.26, 0.05, 0.05), Color("5f6b78"), MeshKit.xf(hand + Vector3(0, 0.3, 0.1), Vector3(15, 0, 0)))
+				ab.add(MeshKit.cyl(0.05, 0.05, 0.03, 8), Color("5f6b78"), MeshKit.xf(hand + Vector3(0, 0.41, 0.13), Vector3(105, 0, 0)))
+				ab.add(MeshKit.box(0.32, 0.06, 0.06), Color("4c5662"), MeshKit.xf(hand + Vector3(0, -0.12, 0.0), Vector3(15, 0, 0)))
+				ab.add(MeshKit.cone(0.05, 0.1, 4), Color("4c5662"), MeshKit.xf(hand + Vector3(0.17, -0.07, 0.0), Vector3(15, 0, 0)))
+				ab.add(MeshKit.cone(0.05, 0.1, 4), Color("4c5662"), MeshKit.xf(hand + Vector3(-0.17, -0.07, 0.0), Vector3(15, 0, 0)))
+		&"nova":
+			if right:
+				# star rifle
+				ab.add(MeshKit.box(0.05, 0.07, 0.42), acc.darkened(0.3), MeshKit.xf(hand + Vector3(0, 0.02, 0.16)))
+				ab.add(MeshKit.cyl(0.022, 0.022, 0.24, 6), Color("c8ccd8"), MeshKit.xf(hand + Vector3(0, 0.04, 0.46), Vector3(90, 0, 0)))
+				ab.add(MeshKit.box(0.04, 0.1, 0.06), ModelLib.WOOD, MeshKit.xf(hand + Vector3(0, -0.05, 0.0)))
+				ab.add(MeshKit.box(0.03, 0.03, 0.12), det, MeshKit.xf(hand + Vector3(0, 0.08, 0.18)))
 
 
 func _pivot(parent: Node3D, pos: Vector3) -> Node3D:

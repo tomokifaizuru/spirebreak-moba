@@ -143,7 +143,8 @@ func _draw() -> void:
 	var y := pr.position.y + 64.0
 	var cols := 4
 	var tw := (left_w - 18.0 - (cols - 1) * 8.0) / cols
-	var th := minf(74.0, (pr.size.y - 64.0 - 2 * 24.0 - 3 * 8.0 - 60.0) / 4.0)
+	var rows := ceili(catalog().basic.size() / float(cols)) + ceili(catalog().upgraded.size() / float(cols))
+	var th := minf(74.0, (pr.size.y - 64.0 - 2 * 26.0 - rows * 8.0 - 58.0) / float(rows))
 	for group in [["BASIC ITEMS", catalog().basic], ["UPGRADES  (components + recipe)", catalog().upgraded]]:
 		_text(Vector2(gx0, y + 14), group[0], 14, Color(1, 1, 1, 0.6))
 		y += 22.0

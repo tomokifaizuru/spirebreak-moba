@@ -447,6 +447,28 @@ func _use_skills(t: Hero) -> void:
 			&"iron_leap":
 				if (d > h.attack_reach(t) + 40.0 and d < ab.cast_range + 40.0) or (t.hp_frac() < 0.3 and d < ab.cast_range):
 					used = _cast_on(slot, t)
+			&"tidal_cleave":
+				if d < ab.radius + t.radius:
+					used = _cast_on(slot, t)
+			&"undertow_rush":
+				if (d > h.attack_reach(t) + 30.0 and d < ab.cast_range + 20.0) or (t.hp_frac() < 0.35 and d < ab.cast_range):
+					used = h.cast(slot, {"dir": (t.position - h.position).normalized()})
+			&"brine_guard":
+				if (h.hp_frac() < 0.8 and a.time - h.last_hurt_time < 1.5) or (d > h.attack_reach(t) + 60.0 and d < 500.0 and t.hp_frac() < 0.5):
+					used = h.cast(slot)
+			&"maelstrom_slam":
+				var crowd3 := a.heroes_near(h.position, ab.radius, h.team, true).size()
+				if d < ab.radius * 0.7 and (crowd3 >= 2 or t.hp_frac() < 0.6):
+					used = h.cast(slot)
+			&"concussive_round":
+				if d < ab.cast_range and (d < 300.0 or t.hp_frac() < 0.6 or h.hp_frac() < 0.5):
+					used = _cast_on(slot, t)
+			&"overdrive":
+				if d < h.attack_reach(t) + 40.0:
+					used = h.cast(slot)
+			&"comet_rail":
+				if d < ab.cast_range * 0.8 and (t.hp_frac() < 0.45 or a.heroes_near(t.position, 200.0, h.team, true).size() >= 2):
+					used = _cast_on(slot, t)
 			&"battle_hunger":
 				if d < h.attack_reach(t) + 80.0:
 					used = h.cast(slot)
@@ -472,7 +494,7 @@ func _use_wave_skills(c: Unit) -> void:
 		if not h.can_cast(slot):
 			continue
 		var id: StringName = h.data.abilities[slot].id
-		if id in [&"piercing_bolt", &"wisp_bolt", &"star_snare", &"twin_fang", &"lullaby", &"quake_swing"]:
+		if id in [&"piercing_bolt", &"wisp_bolt", &"star_snare", &"twin_fang", &"lullaby", &"quake_swing", &"scatter_shot", &"tidal_cleave"]:
 			if h.position.distance_to(c.position) <= h.data.abilities[slot].cast_range:
 				if _cast_on(slot, c):
 					return
@@ -496,13 +518,16 @@ func _retreat(enemies: Array) -> void:
 			if not h.can_cast(slot):
 				continue
 			var id: StringName = h.data.abilities[slot].id
-			if id == &"tumble" or id == &"lantern_hop" or id == &"iron_leap":
+			if id == &"tumble" or id == &"lantern_hop" or id == &"iron_leap" or id == &"undertow_rush":
 				if h.cast(slot, {"dir": away}):
 					break
 			elif id == &"lullaby" and closest != null:
 				if h.cast(slot, {"target": closest}):
 					break
-			elif id == &"smoke_veil" or id == &"barkskin":
+			elif id == &"concussive_round" and closest != null:
+				if h.cast(slot, {"target": closest}):
+					break
+			elif id == &"smoke_veil" or id == &"barkskin" or id == &"brine_guard" or id == &"overdrive":
 				if h.cast(slot):
 					break
 	if closest != null and cd < 420.0 and h.hp_frac() < 0.4 and h.can_use_item():
